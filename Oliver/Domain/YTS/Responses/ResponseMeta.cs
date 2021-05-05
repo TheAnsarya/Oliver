@@ -1,9 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Oliver.Domain.YTS.Responses
-{
-	public class ResponseMeta
-	{
+namespace Oliver.Domain.YTS.Responses {
+	public class ResponseMeta {
 
 		[JsonPropertyName("server_time")]
 		public long ServerTime { get; set; }

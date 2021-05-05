@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Globalization;
 using System.Linq;
 using System.Web;
-using System.Globalization;
 
 namespace Oliver.Domain.YTS.Requests {
 	// TODO: A lot of this class seems templatable.
@@ -155,6 +154,10 @@ namespace Oliver.Domain.YTS.Requests {
 			}
 			if (WithRtRatings != DEFAULT_WITH_RT_RATINGS) {
 				parameters.Add("with_rt_ratings", WithRtRatings.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
+			}
+
+			if (parameters.Count == 0) {
+				return "";
 			}
 
 			var query =

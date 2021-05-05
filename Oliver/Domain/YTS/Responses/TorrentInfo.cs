@@ -1,9 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Oliver.Domain.YTS.Responses
-{
-	public class TorrentInfo
-	{
+namespace Oliver.Domain.YTS.Responses {
+	public class TorrentInfo {
 		[JsonPropertyName("url")]
 		public string Url { get; set; }
 

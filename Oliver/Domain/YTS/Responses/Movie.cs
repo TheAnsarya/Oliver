@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace Oliver.Domain.YTS.Responses
-{
+namespace Oliver.Domain.YTS.Responses {
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO class")]
-	public class Movie
-	{
+	public class Movie {
 		[JsonPropertyName("id")]
 		public int Id { get; set; }
 

@@ -1,9 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Oliver.Domain.YTS.Responses
-{
-	public class Response<T> where T : class
-	{
+namespace Oliver.Domain.YTS.Responses {
+	public class Response<T> where T : class {
 		// Can be "ok" or "error"
 		[JsonPropertyName("status")]
 		public string Status { get; set; }
