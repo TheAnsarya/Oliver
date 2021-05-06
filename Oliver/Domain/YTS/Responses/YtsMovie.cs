@@ -2,8 +2,7 @@
 using System.Text.Json.Serialization;
 
 namespace Oliver.Domain.YTS.Responses {
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "CA2227:Collection properties should be read only", Justification = "DTO class")]
-	public class Movie {
+	public class YtsMovie {
 		[JsonPropertyName("id")]
 		public int Id { get; set; }
 
@@ -74,7 +73,7 @@ namespace Oliver.Domain.YTS.Responses {
 		public string State { get; set; }
 
 		[JsonPropertyName("torrents")]
-		public List<TorrentInfo> Torrents { get; set; }
+		public List<YtsTorrentInfo> Torrents { get; set; }
 
 		[JsonPropertyName("date_uploaded")]
 		public string DateUploaded { get; set; }

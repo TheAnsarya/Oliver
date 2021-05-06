@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 
 namespace Oliver.Domain.YTS.Responses {
-	public class TorrentInfo {
+	public class YtsTorrentInfo {
 		[JsonPropertyName("url")]
 		public string Url { get; set; }
 
