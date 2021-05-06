@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Oliver.Domain;
 
@@ -8,6 +10,26 @@ namespace Oliver.Data {
 		protected override void OnConfiguring(DbContextOptionsBuilder options) => options.UseSqlite("Data Source=oliver.db");
 
 		public override int SaveChanges() {
+			SaveChangesHelper();
+			return base.SaveChanges();
+		}
+
+		public override int SaveChanges(bool acceptAllChangesOnSuccess) {
+			SaveChangesHelper();
+			return base.SaveChanges(acceptAllChangesOnSuccess);
+		}
+
+		public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
+			SaveChangesHelper();
+			return base.SaveChangesAsync(cancellationToken);
+		}
+
+		public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default) {
+			SaveChangesHelper();
+			return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+		}
+
+		private void SaveChangesHelper() {
 			var entries =
 				ChangeTracker
 					.Entries()
@@ -22,8 +44,6 @@ namespace Oliver.Data {
 
 				entity.UpdatedDate = DateTime.Now;
 			}
-
-			return base.SaveChanges();
 		}
 
 		public DbSet<Movie> Movies { get; set; }

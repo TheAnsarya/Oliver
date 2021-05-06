@@ -37,6 +37,7 @@ namespace Oliver {
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "Oliver", Version = "v1" });
 			});
 
+			services.AddScoped<IHashService, HashService>();
 			services.AddScoped<IYtsService, YtsService>();
 		}
 
