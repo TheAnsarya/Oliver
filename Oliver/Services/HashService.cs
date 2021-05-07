@@ -11,11 +11,19 @@ namespace Oliver.Services {
 		// Read stream in 32k chunks
 		private const int CHUNK_LENGTH = 32 * 1024;
 
+		public async Task<string> GetMD5(byte[] data) {
+			return await GetMD5(new MemoryStream(data));
+		}
+
 		public async Task<string> GetMD5(Stream stream) {
 			using var hasher = MD5.Create();
 			var hash = await hasher.ComputeHashAsync(stream);
 
 			return hash.ToHexString();
+		}
+
+		public async Task<string> GetSHA1(byte[] data) {
+			return await GetSHA1(new MemoryStream(data));
 		}
 
 		public async Task<string> GetSHA1(Stream stream) {
@@ -25,11 +33,19 @@ namespace Oliver.Services {
 			return hash.ToHexString();
 		}
 
+		public async Task<string> GetSHA256(byte[] data) {
+			return await GetSHA256(new MemoryStream(data));
+		}
+
 		public async Task<string> GetSHA256(Stream stream) {
 			using var hasher = SHA256.Create();
 			var hash = await hasher.ComputeHashAsync(stream);
 
 			return hash.ToHexString();
+		}
+
+		public async Task<Hashes> GetAll(byte[] data) {
+			return await GetAll(new MemoryStream(data));
 		}
 
 		public async Task<Hashes> GetAll(Stream stream) {
