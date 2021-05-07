@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Oliver.Data;
 using Oliver.Exceptions;
 using Oliver.Services;
 using Oliver.Services.Interfaces;
@@ -36,6 +37,8 @@ namespace Oliver {
 			services.AddSwaggerGen(c => {
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "Oliver", Version = "v1" });
 			});
+
+			services.AddDbContext<OliverContext>();
 
 			services.AddScoped<IHashService, HashService>();
 			services.AddScoped<IYtsService, YtsService>();
