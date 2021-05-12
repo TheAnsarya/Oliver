@@ -4,13 +4,15 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using BencodeNET.Parsing;
+using BencodeNET.Torrents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Oliver.Data;
-using Oliver.Extensions;
 using Oliver.Domain;
 using Oliver.Domain.YTS.Requests;
 using Oliver.Domain.YTS.Responses;
+using Oliver.Extensions;
 using Oliver.Services.Interfaces;
 
 namespace Oliver.Services {
@@ -19,19 +21,19 @@ namespace Oliver.Services {
 
 		private readonly IConfiguration _config;
 
+		private readonly ILogger _logger;
+
 		private readonly IHttpClientFactory _clientFactory;
 
 		private readonly OliverContext _context;
 
-		private readonly ILogger _logger;
-
 		private readonly IHashService _hasher;
 
-		public YtsService(IConfiguration config, IHttpClientFactory clientFactory, OliverContext context, ILogger logger, IHashService hasher) {
+		public YtsService(IConfiguration config, ILogger logger, IHttpClientFactory clientFactory, OliverContext context, IHashService hasher) {
 			_config = config;
+			_logger = logger;
 			_clientFactory = clientFactory;
 			_context = context;
-			_logger = logger;
 			_hasher = hasher;
 		}
 
@@ -88,6 +90,7 @@ namespace Oliver.Services {
 			}
 
 			var client = _clientFactory.CreateClient();
+			var parser = new BencodeParser();
 
 			var skip = 0;
 			var errors = 0;
@@ -122,6 +125,13 @@ namespace Oliver.Services {
 
 						var hashes = await _hasher.GetAll(data);
 
+						Torrent torrent = null;
+						try {
+							torrent = parser.Parse<Torrent>(data);
+						} catch (Exception ex) {
+							_logger.LogError(ex, $"Torrent cannot be parsed {info.Hash}");
+						}
+
 						var torrentFile = new TorrentFile() {
 							Content = data,
 							Filename = Path.GetFileName(path),
@@ -130,18 +140,40 @@ namespace Oliver.Services {
 							Info = info,
 							MD5 = hashes.MD5,
 							SHA1 = hashes.SHA1,
-							SHA256 = hashes.SHA256
+							SHA256 = hashes.SHA256,
+							MultiFile = (torrent != null) ? (torrent.FileMode == TorrentFileMode.Multi) : false,
+
 						};
 
 						info.TorrentFile = torrentFile;
 
 						_context.Add(torrentFile);
 						await _context.SaveChangesAsync();
+
+						if (torrentFile.MultiFile) {
+							var dataFiles = torrent.Files.Select(x => new DataFile {
+								TorrentFile = torrentFile,
+								Filename = x.FileName,
+								Folder = x.Path[0],
+								SubPath = string.Join("/", x.Path.Skip(1).SkipLast(1)),
+								Size = x.FileSize
+							});
+
+							_context.AddRange(dataFiles);
+							torrentFile.Analyzed = true;
+
+							await _context.SaveChangesAsync();
+						} else {
+							_logger.LogError($"Torrent is not in multi file mode ({nameof(FetchMissingTorrents)})");
+						}
+
+
+
 					} catch (Exception ex) {
 						_logger.LogError(ex, $"Cannot download torrent {info.Url}");
-						
-						if (++errors > 100) {
-							var msg = $"Too many errors, aborting command {nameof(FetchMissingTorrents)}";
+
+						if (++errors >= 100) {
+							var msg = $"Too many errors, aborting command ({nameof(FetchMissingTorrents)})";
 							_logger.LogError(msg);
 							throw new Exception(msg);
 						}

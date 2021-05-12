@@ -20,6 +20,7 @@ namespace Oliver {
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) {
 			services.AddHttpClient();
+			services.Configure<Config>()
 
 			services.AddControllers(options => {
 				options.Filters.Add(typeof(ExceptionFilter));
@@ -40,6 +41,7 @@ namespace Oliver {
 
 			services.AddDbContext<OliverContext>();
 
+			services.AddScoped<ICleanupService, CleanupService>();
 			services.AddScoped<IHashService, HashService>();
 			services.AddScoped<IYtsService, YtsService>();
 		}

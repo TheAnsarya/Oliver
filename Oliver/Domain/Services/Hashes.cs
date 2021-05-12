@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Oliver.Domain.Services {
+﻿namespace Oliver.Domain.Services {
 	public class Hashes {
 		public string MD5 { get; set; }
 

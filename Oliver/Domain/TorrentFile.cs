@@ -1,9 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
 
 namespace Oliver.Domain {
 	public class TorrentFile : Entity {
-		public TorrentInfo Info { get; set; }
-
 		public string Hash { get; set; }
 
 		public string Filename { get; set; }
@@ -17,5 +15,17 @@ namespace Oliver.Domain {
 		public string SHA1 { get; set; }
 
 		public string SHA256 { get; set; }
+
+		public bool MultiFile { get; set; }
+
+		public bool Analyzed { get; set; }
+
+		public bool Verified { get; set; }
+
+		// Link Properties
+
+		public virtual TorrentInfo Info { get; set; }
+
+		public virtual List<DataFile> DataFiles { get; set; }
 	}
 }

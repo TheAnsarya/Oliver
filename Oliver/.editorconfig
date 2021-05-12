@@ -8,6 +8,7 @@ root = true
 indent_style = tab
 end_of_line = crlf
 insert_final_newline = true
+indent_size = 4
 # Code files
 [*.{cs,csx,vb,vbx}]
 indent_size = 4
