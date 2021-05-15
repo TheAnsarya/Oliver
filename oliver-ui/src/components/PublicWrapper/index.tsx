@@ -4,7 +4,7 @@ import { Route, Switch } from "react-router-dom";
 // import Login from "../Login";
 import NotFound from "../NotFound";
 
-import "./public-wrapper.scss";
+import "./styles.scss";
 
 const PublicWrapper = () => {
 	return (

@@ -2,31 +2,26 @@ import React, { useEffect, useState, useContext } from "react";
 import { NavLink, useHistory, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
-import { IMenuItem } from "./IMenuItem";
+import { ISideMenuItem } from "./ISideMenuItem";
 import { IStoreState } from "../../redux/storeState";
 
-import { loadMenu } from "./menuSlice";
+import { loadMenu } from "./sidemenuSlice";
 import { logout } from "../../auth/authSlice";
-import { setActiveItem } from "./menuSlice";
-import NotyfContext from "../../components/notyf";
+import { setActiveItem } from "./sidemenuSlice";
+import NotyfContext from "../Notyf/notyf";
 
-import Logo from "../../images/oliver-logo.png";
-import LogoIcon from "../../images/oliver-logo-icon.png";
-import LeftArrow from "../../images/left-arrow.svg";
+import "./styles.scss";
 
-import "./menu.scss";
-
-const Menu = () => {
+const SideMenu = () => {
 	const dispatch = useDispatch();
 	const notyf = useContext(NotyfContext);
 	const history = useHistory();
 	const location = useLocation();
 
-	const [collapsed, toggleCollapsed] = useState(false);
-
-	const menuItems = useSelector<IStoreState>(state => state.menu.menuItems) as Array<IMenuItem>;
-	const isLoading = useSelector<IStoreState>(state => state.menu.isLoading) as boolean;
-	const errorMessage = useSelector<IStoreState>(state => state.menu.error) as string;
+	const collapsed = useSelector<IStoreState>(state => state.sidemenu.collapsed) as boolean;
+	const menuItems = useSelector<IStoreState>(state => state.sidemenu.menuItems) as Array<ISideMenuItem>;
+	const isLoading = useSelector<IStoreState>(state => state.sidemenu.isLoading) as boolean;
+	const errorMessage = useSelector<IStoreState>(state => state.sidemenu.error) as string;
 
 	useEffect(() => {
 		if (menuItems.length === 0 &&
@@ -42,7 +37,7 @@ const Menu = () => {
 		}
 	}, [errorMessage, notyf]);
 
-	const activeItem = useSelector<IStoreState>(state => state.menu.activeItem) as string;
+	const activeItem = useSelector<IStoreState>(state => state.sidemenu.activeItem) as string;
 
 	const onMenuItemClick: React.MouseEventHandler<HTMLButtonElement> = (event) => {
 		event.preventDefault();
@@ -59,11 +54,6 @@ const Menu = () => {
 
 	return (
 		<nav id="navigation" className={collapsed ? "collapsed" : ""}>
-			<div id="menu-header">
-				<img src={LeftArrow} onClick={() => toggleCollapsed(!collapsed)} alt="Collapse Menu" />
-				<img src={collapsed ? LogoIcon : Logo} alt="Menu Logo - Oliver" />
-			</div>
-
 			<div id="menu-body" className={isLoading ? "loading" : ""}>
 				{
 					menuItems.length > 0 &&
@@ -102,19 +92,14 @@ const Menu = () => {
 						}
 					</ul>
 				}
-
-				<div onClick={() => toggleCollapsed(!collapsed)}>
-					&nbsp;
-				</div>
 			</div>
 
 			<div id="menu-foot">
-				<p>OLIVER</p>
-				<a href="https://github.com/TheAnsarya/Oliver">See Github Repository</a>
-				<button onClick={handleLogout}>Logout</button>
+				<a className="github-link" href="https://github.com/TheAnsarya/Oliver">See Github Repository</a>
+				<button className="logout-link" onClick={handleLogout}>Logout</button>
 			</div>
 		</nav>
 	);
 }
 
-export default Menu;
+export default SideMenu;

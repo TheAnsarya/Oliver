@@ -1,0 +1,43 @@
+@import "./colors.scss";
+@import "./vars.scss";
+
+body,
+html {
+	height: 100%;
+}
+
+html {
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	color: $font-color;
+	font-family: $font-family;
+}
+
+.link {
+	-webkit-tap-highlight-color: transparent;
+	-webkit-user-select: none;
+	background: none;
+	border-radius: 0;
+	border: 0;
+	color: $link-color;
+	cursor: pointer;
+	margin: 0;
+	outline: none;
+	padding: 0;
+	text-align: inherit;
+	text-decoration: none;
+	touch-action: manipulation;
+	transition: color 0.2s;
+	user-select: none;
+}
+
+svg:not(:root) {
+	overflow: hidden;
+}

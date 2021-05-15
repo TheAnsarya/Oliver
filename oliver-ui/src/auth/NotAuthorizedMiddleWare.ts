@@ -1,5 +1,5 @@
 import { Middleware } from "redux";
-import { logout } from "../auth/authSlice";
+import { logout } from "./authSlice";
 import { IStoreState } from "../redux/storeState";
 
 const authInterceptor: Middleware<{}, IStoreState> = store => next => action => {

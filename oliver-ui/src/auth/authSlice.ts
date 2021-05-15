@@ -4,24 +4,27 @@ import { clearAuthToken, storeAuthToken, authTokenExists } from "./auth";
 const authSlice = createSlice({
 	name: "auth",
 	initialState: {
-		isLoggedIn: authTokenExists(),
+		isLoggedIn: true,//authTokenExists(),
 		isLoading: false,
-		error: ""
+		error: "",
+		username: "",
 	},
 	reducers: {
 		logout: (state) => {
 			clearAuthToken();
 			state.isLoading = false;
 			state.isLoggedIn = false;
+			state.username = "";
 		}
 	},
 	extraReducers: {
 		"auth/login/pending": (state) => {
 			state.isLoading = true;
 		},
-		"auth/login/fulfilled": (state) => {
+		"auth/login/fulfilled": (state, action) => {
 			state.isLoading = false;
 			state.isLoggedIn = true;
+			state.username = action.payload.username;
 		},
 		"auth/login/rejected": (state, action) => {
 			state.isLoading = false;

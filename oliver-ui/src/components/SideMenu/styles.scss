@@ -104,12 +104,12 @@ $menu-item-height: 40px;
 				}
 			}
 
-			a::before {
-				background-image: url("../../images/spinner.svg");
+			.logout-link::before {
+				background-image: url("../../images/logout-icon.svg");
 			}
 
-			button::before {
-				background-image: url("../../images/logout-icon.svg");
+			.github-link::before {
+				background-image: url("../../images/github.svg");
 			}
 		}
 	}
@@ -273,17 +273,18 @@ $menu-item-height: 40px;
 				}
 			}
 
-			a::before {
-				background-image: url("../../images/spinner.svg");
+
+			.logout-link::before {
+				background-image: url("../../images/logout-icon.svg");
 			}
 
-			button {
+			.github-link::before {
+				background-image: url("../../images/github.svg");
+			}
+
+			.logout-link, .github-link {
 				width: 100%;
 				text-align: left;
-
-				&::before {
-					background-image: url("../../images/logout-icon.svg");
-				}
 			}
 		}
 	}

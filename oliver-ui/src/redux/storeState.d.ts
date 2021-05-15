@@ -1,15 +1,22 @@
-import { IMenuItem } from "../components/Menu/IMenuItem";
+import { ISideMenuItem } from "../components/SideMenu/ISideMenuItem";
 
 interface IStoreState {
+	activity: {
+		isActive: boolean,
+		isLoading: boolean,
+		error: string,
+	},
 	auth: {
 		isLoading: boolean,
 		isLoggedIn: boolean,
-		error: string
+		error: string,
+		username: string,
 	},
-	menu: {
-		menuItems: Array<IMenuItem>,
+	sidemenu: {
 		isLoading: boolean,
 		error: string | null,
-		activeItem: string
+		menuItems: Array<ISideMenuItem>,
+		activeItem: string,
+		collapsed: boolean,
 	},
 }

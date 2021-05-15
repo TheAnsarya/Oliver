@@ -1,0 +1,42 @@
+@import "../../sass/colors.scss";
+@import "../../sass/mixins.scss";
+@import "../../sass/vars.scss";
+
+.quicksearch-container {
+	position: relative;
+	display: inline-block;
+	margin-left: 10px;
+	width: 360px;
+	height: 40px;
+	vertical-align: super;
+
+	.quicksearch-input-container {
+		font-size: 13px;
+		font-family: $font-family;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		display: flex;
+		align-items: center;
+		flex-flow: row nowrap;
+		padding: 4px;
+		height: 40px;
+		border-radius: 4px;
+		background: hsla(0, 0%, 100%, 0.08);
+		color: $font-color;
+		transition: background-color 0.2s, color 0.2s;
+
+		.quicksearch-icon {
+			margin: 4px 10px 0 18px;
+			font-size: 14px;
+		}
+
+		.quicksearch-input {
+			flex-grow: 1;
+			height: 100%;
+			outline: 0;
+			border: none;
+			background: transparent;
+			color: $font-color;
+		}
+	}
+}

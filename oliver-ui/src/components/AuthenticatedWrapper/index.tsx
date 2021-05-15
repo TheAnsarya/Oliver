@@ -4,9 +4,10 @@ import { Route, Switch, useHistory } from "react-router-dom";
 import { IStoreState } from "../../redux/storeState";
 
 import Home from "../Home";
-import Menu from "../Menu";
+import SideMenu from "../SideMenu";
+import TopBar from "../TopBar";
 
-import "./authenticated-wrapper.scss";
+import "./styles.scss";
 
 const AuthenticatedWrapper = () => {
 	const history = useHistory();
@@ -20,8 +21,9 @@ const AuthenticatedWrapper = () => {
 
 	return (
 		<div id="authenticated-wrapper">
+			<TopBar />
 			<div id="menu-content">
-				<Menu />
+				<SideMenu />
 			</div>
 			<div id="authenticated-content">
 				<Switch>

@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Switch } from "react-router-dom";
 import AuthenticatedWrapper from "../AuthenticatedWrapper";
 import PublicWrapper from "../PublicWrapper";
 
-import './App.css';
+import './styles.css';
 import "../../sass/normalize.scss";
 import "../../sass/layout.scss";
 import "../../sass/loader.scss";

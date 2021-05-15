@@ -1,12 +1,14 @@
 import { configureStore, getDefaultMiddleware } from "@reduxjs/toolkit";
+import activitySlice from "../activity/activitySlice";
 import authSlice from "../auth/authSlice";
-import menuSlice from "../components/Menu/menuSlice";
-import NotAuthorizedMiddleWare from "./NotAuthorizedMiddleWare";
+import sidemenuSlice from "../components/SideMenu/sidemenuSlice";
+import NotAuthorizedMiddleWare from "../auth/NotAuthorizedMiddleWare";
 
 const store = configureStore({
 	reducer: {
+		activity: activitySlice.reducer,
 		auth: authSlice.reducer,
-		menu: menuSlice.reducer,
+		sidemenu: sidemenuSlice.reducer,
 	},
 	middleware: () => [NotAuthorizedMiddleWare, ...getDefaultMiddleware()]
 });
