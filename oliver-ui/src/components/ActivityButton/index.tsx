@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import clsx from "clsx";
 
@@ -10,13 +10,13 @@ import ActivityIcon from "../../images/glyphicons/activity.svg";
 import "./styles.scss";
 
 function ActivityButton() {
-const isActive = useSelector<IStoreState>(state => state.activity.isActive) as boolean;
+	const isActive = useSelector<IStoreState>(state => state.activity.isActive) as boolean;
 
 	return (
 		<button aria-label="Activity" role="button"
-			className={clsx(isActive && "activity-icon-active", "activity-icon", "")} type="button">
+			className={clsx(isActive && "activity-icon-active", "")} type="button">
 			<span className="activity-icon-container">
-				<Icon src={ActivityIcon} className={clsx(isActive && "activity-icon-active", "activity-icon")} />
+				<Icon src={ActivityIcon} className={clsx("topbar-icon", "activity-icon")} />
 			</span>
 		</button>
 	);

@@ -1,10 +1,13 @@
 $white: #fff;
 $whitesmoke: #efeded;
 
-$font-color: #2a333b;
-
 $purple: #66078f;
+$light-black: rgb(31, 35, 38);
+
+$input-background: hsla(0, 0%, 100%, 0.08);
 
 $font-color: #eee;
 
 $link-color: #ffffffb3;
+
+$link-color-svg: brightness(0) saturate(100%) invert(100%) sepia(1%) saturate(184%) hue-rotate(97deg) brightness(116%) contrast(100%) opacity(70%);

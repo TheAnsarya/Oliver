@@ -1,5 +1,6 @@
 @import "../../sass/colors.scss";
 @import "../../sass/mixins.scss";
+@import "../../sass/vars.scss";
 
 $menu-item-height: 40px;
 
@@ -7,7 +8,7 @@ $menu-item-height: 40px;
 	display: flex;
 	flex-direction: column;
 	height: 100vh;
-	background-color: $purple;
+	background: $purple-vertical-up-gradient;
 	font-family: "Open Sans", sans-serif;
 	color: $white;
 	@include transition(width, 0.3s, ease-in-out);
@@ -25,6 +26,21 @@ $menu-item-height: 40px;
 	#menu-foot {
 		border-top: 1px solid $white;
 		padding: 1em;
+
+		.logout-link, .github-link {
+			width: 100%;
+			text-align: left;
+		}
+
+		.logout-link::before {
+			background-image: url("../../images/glyphicons/log-out.svg");
+			filter: $link-color-svg;
+		}
+
+		.github-link::before {
+			background-image: url("../../images/github.svg");
+			filter: $link-color-svg;
+		}
 	}
 
 	&.collapsed {
@@ -102,14 +118,6 @@ $menu-item-height: 40px;
 				&:hover {
 					background-color: rgba(43, 48, 53, 0.1);
 				}
-			}
-
-			.logout-link::before {
-				background-image: url("../../images/logout-icon.svg");
-			}
-
-			.github-link::before {
-				background-image: url("../../images/github.svg");
 			}
 		}
 	}
@@ -271,20 +279,6 @@ $menu-item-height: 40px;
 					font-weight: 600;
 					letter-spacing: 1px;
 				}
-			}
-
-
-			.logout-link::before {
-				background-image: url("../../images/logout-icon.svg");
-			}
-
-			.github-link::before {
-				background-image: url("../../images/github.svg");
-			}
-
-			.logout-link, .github-link {
-				width: 100%;
-				text-align: left;
 			}
 		}
 	}

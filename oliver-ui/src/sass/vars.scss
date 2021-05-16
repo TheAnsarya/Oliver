@@ -1,1 +1,12 @@
 $font-family: "Montserrat", san-serif;
+
+// Gradients made from https://cssgradient.io/
+
+// topbar
+$purple-horizontal-gradient: linear-gradient(90deg, $purple 0%, $light-black 25%, $light-black 100%);
+
+// sidemenu
+$purple-vertical-up-gradient: linear-gradient(0deg, $purple 0%, $light-black 25%, $light-black 100%);
+
+// quicksearch
+$purple-horizontal-gradient-input-bg: linear-gradient(90deg, $purple 0%, $input-background 25%, $input-background 100%);

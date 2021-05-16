@@ -1,10 +1,10 @@
-import React from 'react';
+import React from "react";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 
 import AuthenticatedWrapper from "../AuthenticatedWrapper";
 import PublicWrapper from "../PublicWrapper";
 
-import './styles.css';
+import "./styles.css";
 import "../../sass/normalize.scss";
 import "../../sass/layout.scss";
 import "../../sass/loader.scss";
@@ -13,7 +13,7 @@ import "notyf/notyf.min.css";
 function App() {
 	return (
 		<BrowserRouter>
-			<div className="App">
+			<div className="app">
 				<Switch>
 					<Route path="/" exact>
 						<PublicWrapper />

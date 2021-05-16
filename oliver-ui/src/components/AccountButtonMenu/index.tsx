@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import clsx from "clsx";
 import MenuSeparator from "../MenuSeparator";
 import { useDispatch, useSelector } from "react-redux";
