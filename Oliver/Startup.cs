@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Oliver.Data;
+using Oliver.Domain.Config;
 using Oliver.Exceptions;
 using Oliver.Services;
 using Oliver.Services.Interfaces;
@@ -20,12 +21,16 @@ namespace Oliver {
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) {
 			services.AddHttpClient();
-			services.Configure<Config>()
+
+			// Config options from appsettings.json
+			services.Configure<YtsOptions>(Configuration.GetSection(YtsOptions.SectionName));
+			services.Configure<FoldersOptions>(Configuration.GetSection(FoldersOptions.SectionName));
 
 			services.AddControllers(options => {
 				options.Filters.Add(typeof(ExceptionFilter));
 			});
 
+			// Allow requests from react app
 			services.AddCors(options => {
 				options.AddDefaultPolicy(builder => {
 					builder
@@ -43,6 +48,7 @@ namespace Oliver {
 
 			services.AddScoped<ICleanupService, CleanupService>();
 			services.AddScoped<IHashService, HashService>();
+			services.AddScoped<ITorrentService, TorrentService>();
 			services.AddScoped<IYtsService, YtsService>();
 		}
 
