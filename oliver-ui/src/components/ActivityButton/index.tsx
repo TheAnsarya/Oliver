@@ -14,7 +14,7 @@ function ActivityButton() {
 
 	return (
 		<button aria-label="Activity" role="button"
-			className={clsx(isActive && "activity-icon-active", "")} type="button">
+			className={clsx(isActive && "activity-icon-active", "link", "button-icon")} type="button">
 			<span className="activity-icon-container">
 				<Icon src={ActivityIcon} className={clsx("topbar-icon", "activity-icon")} />
 			</span>

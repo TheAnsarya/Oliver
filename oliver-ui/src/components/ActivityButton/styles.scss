@@ -2,4 +2,10 @@
 @import "../../sass/mixins.scss";
 
 .activity-icon-container {
+	background: $purple;
+	border-radius: 50%;
+	width: 32px;
+	height: 32px;
+	top: 1px;
+	text-align: center;
 }

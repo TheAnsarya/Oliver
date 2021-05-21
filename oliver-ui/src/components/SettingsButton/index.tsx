@@ -13,9 +13,9 @@ function SettingsButton() {
 			aria-label="Settings"
 			href="settings/general"
 			role="link"
-			className="settings-button link"
+			className="settings-button button-icon link settings-icon-container"
 		>
-			<Icon src={SettingsIcon} />
+			<Icon className={clsx("topbar-icon", "settings-icon")} src={SettingsIcon} />
 		</a>
 	);
 }
