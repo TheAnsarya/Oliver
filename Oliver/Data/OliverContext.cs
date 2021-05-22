@@ -53,5 +53,9 @@ namespace Oliver.Data {
 		public DbSet<GenreString> GenreStrings { get; set; }
 
 		public DbSet<TorrentFile> TorrentFiles { get; set; }
+
+		public DbSet<TorrentDataFile> TorrentDataFiles { get; set; }
+
+		public DbSet<DataFile> DataFiles { get; set; }
 	}
 }

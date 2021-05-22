@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace Oliver.Extensions {
@@ -25,5 +26,17 @@ namespace Oliver.Extensions {
 		}
 
 		public static string Timestamp(this DateTime date) => date.ToString("yyyy-MM-dd_HH-mm-ss-ffff");
+
+		public static IEnumerable<string> Split(this string input, int length) {
+			if (input == null) {
+				throw new ArgumentNullException(nameof(input));
+			} else if (length < 1) { 
+				throw new ArgumentOutOfRangeException("Length must be greater than zero.", nameof(length));
+			}
+
+			for (int i = 0; i < input.Length; i += length) {
+				yield return input.Substring(i, Math.Min(length, input.Length - i));
+			}
+		}
 	}
 }

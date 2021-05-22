@@ -26,6 +26,6 @@ namespace Oliver.Domain {
 
 		public virtual TorrentInfo Info { get; set; }
 
-		public virtual List<DataFile> DataFiles { get; set; }
+		public virtual List<TorrentDataFile> TorrentDataFile { get; set; }
 	}
 }

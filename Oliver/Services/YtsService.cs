@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -54,7 +55,8 @@ namespace Oliver.Services {
 			return moviesList;
 		}
 
-		public async Task<Movie> AddOrUpdateMovie(YtsMovie dto) {
+		// The bool indicates if the movie was added/updated (true) or if it already exists and no changes were made (false)
+		public async Task<(Movie, bool)> AddOrUpdateMovie(YtsMovie dto) {
 			if (dto == null) {
 				throw new ArgumentNullException(nameof(dto));
 			}
@@ -67,14 +69,106 @@ namespace Oliver.Services {
 			} else {
 				var other = new Movie(dto);
 				if (movie == other) {
-					return movie;
+					return (movie, false);
 				}
 
 				movie.Update(other);
 			}
 
 			await _context.SaveChangesAsync();
-			return movie;
+			return (movie, true);
+		}
+
+		public async Task<IList<Movie>> AddMovies(ListMoviesData movieList) {
+			if (movieList == null) {
+				throw new ArgumentNullException(nameof(movieList));
+			}
+
+			var updatedMovies = new List<Movie>();
+
+			foreach (var dto in movieList.Movies) {
+				var (movie, updated) = await AddOrUpdateMovie(dto);
+				if (updated) {
+					updatedMovies.Add(movie);
+				}
+			}
+
+			return updatedMovies;
+		}
+
+		public async Task<TorrentFile> AddTorrentFile(TorrentInfo info) {
+			var client = _clientFactory.CreateClient();
+			var parser = new BencodeParser();
+
+			var folder = _config["Folders:Torrents:Current"];
+			var oldFolder = _config["Folders:Torrents:Old"];
+
+			var data = await client.GetByteArrayAsync(info.Url);
+			var path = Path.Combine(folder, $"{info.Hash}.torrent");
+
+			if (File.Exists(path)) {
+				var oldData = await File.ReadAllBytesAsync(path);
+				if (!data.IsSame(oldData)) {
+					var oldPath = Path.Combine(oldFolder, $"{info.Hash}-{DateTime.Now.Timestamp()}.torrent");
+					File.Move(path, oldPath);
+					await File.WriteAllBytesAsync(path, data);
+				}
+			} else {
+				await File.WriteAllBytesAsync(path, data);
+			}
+
+			var hashes = await _hasher.GetAll(data);
+
+			Torrent torrent = null;
+			try {
+				torrent = parser.Parse<Torrent>(data);
+			} catch (Exception ex) {
+				_logger.LogError(ex, $"Torrent cannot be parsed {info.Hash}");
+			}
+
+			var torrentFile = new TorrentFile() {
+				Content = data,
+				Filename = Path.GetFileName(path),
+				FilePath = path,
+				Hash = info.Hash,
+				Info = info,
+				MD5 = hashes.MD5,
+				SHA1 = hashes.SHA1,
+				SHA256 = hashes.SHA256,
+				MultiFile = (torrent != null) ? (torrent.FileMode == TorrentFileMode.Multi) : false,
+			};
+
+			info.TorrentFile = torrentFile;
+
+			_context.Add(torrentFile);
+			await _context.SaveChangesAsync();
+
+			return torrentFile;
+		}
+
+		public async Task<IList<DataFile>> AnalyzeTorrentFile(TorrentFile torrentFile) {
+			var parser = new BencodeParser();
+			var torrent = parser.Parse<Torrent>(torrentFile.Content);
+
+			if (!torrentFile.MultiFile) {
+				// TODO: possibly fix?
+				throw new NotImplementedException("Torrent is not in multi file mode.");
+			}
+
+			var dataFiles = torrent.Files.Select(x => new DataFile {
+				TorrentFile = torrentFile,
+				Filename = x.FileName,
+				Folder = x.Path[0],
+				SubPath = string.Join("/", x.Path.Skip(1).SkipLast(1)),
+				Size = x.FileSize
+			}).ToList();
+
+			torrentFile.Analyzed = true;
+
+			_context.AddRange(dataFiles);
+			await _context.SaveChangesAsync();
+
+			return dataFiles;
 		}
 
 		public async Task FetchMissingTorrents() {

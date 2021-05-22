@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Oliver.BackgroundServices;
 using Oliver.Data;
 using Oliver.Domain.Config;
 using Oliver.Exceptions;
@@ -20,11 +21,13 @@ namespace Oliver {
 
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) {
-			services.AddHttpClient();
-
 			// Config options from appsettings.json
 			services.Configure<YtsOptions>(Configuration.GetSection(YtsOptions.SectionName));
 			services.Configure<FoldersOptions>(Configuration.GetSection(FoldersOptions.SectionName));
+
+			services.AddHttpClient();
+
+			services.AddDbContext<OliverContext>();
 
 			services.AddControllers(options => {
 				options.Filters.Add(typeof(ExceptionFilter));
@@ -44,12 +47,14 @@ namespace Oliver {
 				c.SwaggerDoc("v1", new OpenApiInfo { Title = "Oliver", Version = "v1" });
 			});
 
-			services.AddDbContext<OliverContext>();
-
 			services.AddScoped<ICleanupService, CleanupService>();
 			services.AddScoped<IHashService, HashService>();
 			services.AddScoped<ITorrentService, TorrentService>();
 			services.AddScoped<IYtsService, YtsService>();
+
+			// Background services
+			services.AddHostedService<FileProcessingService>();
+			services.AddHostedService<FileHashingService>();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
