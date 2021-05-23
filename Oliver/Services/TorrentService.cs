@@ -9,6 +9,7 @@ using BencodeNET.Parsing;
 using BencodeNET.Torrents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Oliver.Constants;
 using Oliver.Data;
 using Oliver.Domain;
 using Oliver.Domain.Services;
@@ -33,6 +34,68 @@ namespace Oliver.Services {
 			_hasher = hasher;
 		}
 
+		// We are assuming the that torrent, if analyzed, is properly represented in the torrentdatafiles
+		// TODO: verify the above assumption
+		public async Task<TorrentVerification> VerifyTorrent(TorrentFile torrentFile) {
+			/*
+			 * [x]	make sure analyzed
+			 * [x]	verify all torrentdatafiles are matched with a datafile
+			 * [x]	load torrent from bencode
+			 * [ ]	build files in torrent datastructure
+			 *				******* use torrentdata files instead
+			 * [ ]	make sure all datafiles still exist and sizes still match
+			 * [ ]	match files from torrent to datafiles
+			 *				******* use torrentdata files instead
+			 * [ ]	(verify full match)
+			 *				******* use torrentdata files instead
+			 * [ ]	generate pieces hash from datafiles
+			 * [ ]	add file-part list to pieces as made (which file, start of read, end of read)
+			 * [ ]	compare pieces
+			 * [ ]		all match == torrentfile is verified
+			 * [ ]		is each file matched
+			 * [ ]
+			 * [ ]
+			 */
+
+			if (torrentFile == null) {
+				throw new ArgumentNullException(nameof(torrentFile));
+			}
+
+			if (torrentFile.AnalyzedStatus == TorrentAnalyzedStatus.NotAnalyzed) {
+				return new TorrentVerification {
+					Status = TorrentVerificationStatus.NotAnalyzed
+				};
+			}
+
+			if (torrentFile.AnalyzedStatus == TorrentAnalyzedStatus.NotParsable) {
+				return new TorrentVerification {
+					Status = TorrentVerificationStatus.TorrentCannotBeParsed
+				};
+			}
+
+			if (torrentFile.TorrentDataFiles.Any(x => x.DataFile == null)) {
+				return new TorrentVerification {
+					Status = TorrentVerificationStatus.MissingDataFiles
+				};
+			}
+
+			// Make sure files exist and sizes are still the same
+			var badDataFiles =
+				torrentFile.TorrentDataFiles
+					.Select(x => x.DataFile)
+					.Where(x => !File.Exists(x.FilePath) || (new FileInfo(x.FilePath).Length != x.Size))
+					.ToList();
+
+			if (badDataFiles.Count > 0) {
+				return new TorrentVerification {
+					Status = TorrentVerificationStatus.DataFilesNotFound,
+					BadDataFiles = badDataFiles,
+				};
+			}
+
+
+		}
+
 		public async Task<TorrentVerification> VerifyTorrent(Torrent torrent, string folderName) {
 			if (torrent == null) {
 				throw new ArgumentNullException(nameof(torrent));
@@ -43,8 +106,8 @@ namespace Oliver.Services {
 				throw new ArgumentException("Directory does not exist.", nameof(folderName));
 			}
 
-			if (!folderName.EndsWith("/")) {
-				folderName = $"{folderName}/";
+			if (!folderName.EndsWith(Path.DirectorySeparatorChar)) {
+				folderName = $"{folderName}{Path.DirectorySeparatorChar}";
 			}
 
 			var filenames = torrent.Files.Select(x => Path.Combine(folderName, x.FullPath));

@@ -2,10 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Oliver.Constants;
 
 namespace Oliver.Domain.Services {
 	public class TorrentVerification {
-		public bool IsVerified { get => Pieces.All(x => x); }
+		public bool IsVerified => Status == TorrentVerificationStatus.Verified;
+
+		// Why it might not be verified:
+		public TorrentVerificationStatus Status { get; set; }
+
+		public Exception StatusException { get; set; }
+
+		public List<DataFile> BadDataFiles { get; set; }
+
+		public bool AllPiecesMatched { get => Pieces.All(x => x); }
 
 		public bool FilenamesMatch { get => Filenames.All(x => x); }
 

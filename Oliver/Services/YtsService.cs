@@ -9,6 +9,7 @@ using BencodeNET.Parsing;
 using BencodeNET.Torrents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Oliver.Constants;
 using Oliver.Data;
 using Oliver.Domain;
 using Oliver.Domain.YTS.Requests;
@@ -119,13 +120,6 @@ namespace Oliver.Services {
 
 			var hashes = await _hasher.GetAll(data);
 
-			Torrent torrent = null;
-			try {
-				torrent = parser.Parse<Torrent>(data);
-			} catch (Exception ex) {
-				_logger.LogError(ex, $"Torrent cannot be parsed {info.Hash}");
-			}
-
 			var torrentFile = new TorrentFile() {
 				Content = data,
 				Filename = Path.GetFileName(path),
@@ -135,7 +129,6 @@ namespace Oliver.Services {
 				MD5 = hashes.MD5,
 				SHA1 = hashes.SHA1,
 				SHA256 = hashes.SHA256,
-				MultiFile = (torrent != null) ? (torrent.FileMode == TorrentFileMode.Multi) : false,
 			};
 
 			info.TorrentFile = torrentFile;
@@ -146,137 +139,50 @@ namespace Oliver.Services {
 			return torrentFile;
 		}
 
-		public async Task<IList<DataFile>> AnalyzeTorrentFile(TorrentFile torrentFile) {
+		// Returns null if torrent cannot be parsed
+		// TODO: already parsed, but not is not multi so datafiles weren't added?
+		public async Task<IList<TorrentDataFile>> AnalyzeTorrentFile(TorrentFile torrentFile) {
 			var parser = new BencodeParser();
-			var torrent = parser.Parse<Torrent>(torrentFile.Content);
+			Torrent torrent = null;
 
-			if (!torrentFile.MultiFile) {
-				// TODO: possibly fix?
-				throw new NotImplementedException("Torrent is not in multi file mode.");
+			try {
+				torrent = parser.Parse<Torrent>(torrentFile.Content);
+			} catch (Exception ex) {
+				_logger.LogError(ex, $"Torrent cannot be parsed {torrentFile.Hash}");
 			}
 
-			var dataFiles = torrent.Files.Select(x => new DataFile {
-				TorrentFile = torrentFile,
-				Filename = x.FileName,
-				Folder = x.Path[0],
-				SubPath = string.Join("/", x.Path.Skip(1).SkipLast(1)),
-				Size = x.FileSize
-			}).ToList();
+			if (torrent == null) {
+				torrentFile.AnalyzedStatus = TorrentAnalyzedStatus.NotParsable;
 
-			torrentFile.Analyzed = true;
+			} else { 
+				torrentFile.IsMultiFile = torrent.FileMode == TorrentFileMode.Multi;
+				torrentFile.PieceSize = (int)torrent.PieceSize;
+				torrentFile.Pieces = torrent.Pieces;
 
-			_context.AddRange(dataFiles);
+				// TODO: finish fixing this method
+				if (!torrent.IsMultiFile) {
+					// TODO: possibly fix?
+					throw new NotImplementedException("Torrent is not in multi file mode.");
+				}
+
+				torrentFile.TorrentDataFiles = torrent.Files.Select(x => new TorrentDataFile {
+					TorrentFile = torrentFile,
+					Filename = x.FileName,
+					Folder = x.Path[0],
+					SubPath = string.Join(Path.DirectorySeparatorChar, x.Path.Skip(1).SkipLast(1)),
+					Size = x.FileSize
+				}).ToList();
+
+
+				torrentFile.IsAnalyzed = true;
+
+				_context.AddRange(torrentFile.TorrentDataFiles);
+			}
+
 			await _context.SaveChangesAsync();
 
 			return dataFiles;
 		}
 
-		public async Task FetchMissingTorrents() {
-			var folder = _config["Folders:Torrents:Current"];
-			var oldFolder = _config["Folders:Torrents:Old"];
-
-			// TODO: Move to a startup task
-			if (!Directory.Exists(folder)) {
-				Directory.CreateDirectory(folder);
-			}
-			if (!Directory.Exists(oldFolder)) {
-				Directory.CreateDirectory(oldFolder);
-			}
-
-			var client = _clientFactory.CreateClient();
-			var parser = new BencodeParser();
-
-			var skip = 0;
-			var errors = 0;
-			var total =
-				_context.TorrentInfos
-					.Where(x => x.TorrentFile == null)
-					.Count();
-
-			while (skip < total) {
-				var infos =
-					_context.TorrentInfos
-						.Where(x => x.TorrentFile == null)
-						.Skip(skip)
-						.Take(BATCH_TORRENTS_SIZE)
-						.ToList();
-
-				foreach (var info in infos) {
-					try {
-						var data = await client.GetByteArrayAsync(info.Url);
-						var path = Path.Combine(folder, $"{info.Hash}.torrent");
-
-						if (File.Exists(path)) {
-							var oldData = await File.ReadAllBytesAsync(path);
-							if (!data.IsSame(oldData)) {
-								var oldPath = Path.Combine(oldFolder, $"{info.Hash}-{DateTime.Now.Timestamp()}.torrent");
-								File.Move(path, oldPath);
-								await File.WriteAllBytesAsync(path, data);
-							}
-						} else {
-							await File.WriteAllBytesAsync(path, data);
-						}
-
-						var hashes = await _hasher.GetAll(data);
-
-						Torrent torrent = null;
-						try {
-							torrent = parser.Parse<Torrent>(data);
-						} catch (Exception ex) {
-							_logger.LogError(ex, $"Torrent cannot be parsed {info.Hash}");
-						}
-
-						var torrentFile = new TorrentFile() {
-							Content = data,
-							Filename = Path.GetFileName(path),
-							FilePath = path,
-							Hash = info.Hash,
-							Info = info,
-							MD5 = hashes.MD5,
-							SHA1 = hashes.SHA1,
-							SHA256 = hashes.SHA256,
-							MultiFile = (torrent != null) ? (torrent.FileMode == TorrentFileMode.Multi) : false,
-
-						};
-
-						info.TorrentFile = torrentFile;
-
-						_context.Add(torrentFile);
-						await _context.SaveChangesAsync();
-
-						if (torrentFile.MultiFile) {
-							var dataFiles = torrent.Files.Select(x => new DataFile {
-								TorrentFile = torrentFile,
-								Filename = x.FileName,
-								Folder = x.Path[0],
-								SubPath = string.Join("/", x.Path.Skip(1).SkipLast(1)),
-								Size = x.FileSize
-							});
-
-							_context.AddRange(dataFiles);
-							torrentFile.Analyzed = true;
-
-							await _context.SaveChangesAsync();
-						} else {
-							_logger.LogError($"Torrent is not in multi file mode ({nameof(FetchMissingTorrents)})");
-						}
-
-
-
-					} catch (Exception ex) {
-						_logger.LogError(ex, $"Cannot download torrent {info.Url}");
-
-						if (++errors >= 100) {
-							var msg = $"Too many errors, aborting command ({nameof(FetchMissingTorrents)})";
-							_logger.LogError(msg);
-							throw new Exception(msg);
-						}
-
-					}
-				}
-
-				skip += BATCH_TORRENTS_SIZE;
-			}
-		}
 	}
 }

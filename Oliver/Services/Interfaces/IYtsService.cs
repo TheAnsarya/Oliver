@@ -15,8 +15,6 @@ namespace Oliver.Services.Interfaces {
 
 		Task<TorrentFile> AddTorrentFile(TorrentInfo info);
 
-		Task<IList<DataFile>> AnalyzeTorrentFile(TorrentFile torrentFile);
-
-		Task FetchMissingTorrents();
+		Task<IList<TorrentDataFile>> AnalyzeTorrentFile(TorrentFile torrentFile);
 	}
 }

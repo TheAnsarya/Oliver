@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Oliver.Constants;
 
 namespace Oliver.Domain {
 	public class TorrentFile : Entity {
@@ -10,22 +11,28 @@ namespace Oliver.Domain {
 
 		public byte[] Content { get; set; }
 
+		public int PieceSize { get; set; }
+
+		public byte[] Pieces { get; set; }
+
+		public bool IsHashed => MD5 != null;
+
 		public string MD5 { get; set; }
 
 		public string SHA1 { get; set; }
 
 		public string SHA256 { get; set; }
 
-		public bool MultiFile { get; set; }
+		public bool IsMultiFile { get; set; }
 
-		public bool Analyzed { get; set; }
+		public TorrentAnalyzedStatus AnalyzedStatus { get; set; }
 
-		public bool Verified { get; set; }
+		public bool IsVerified { get; set; }
 
 		// Link Properties
 
 		public virtual TorrentInfo Info { get; set; }
 
-		public virtual List<TorrentDataFile> TorrentDataFile { get; set; }
+		public virtual List<TorrentDataFile> TorrentDataFiles { get; set; }
 	}
 }

@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Data\Mappings\" />
-    <Folder Include="Constants\" />
   </ItemGroup>
 
 </Project>

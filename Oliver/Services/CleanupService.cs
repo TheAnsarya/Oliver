@@ -38,10 +38,10 @@ namespace Oliver.Services {
 			var baseQuery =
 				_context.TorrentFiles
 						.Where(x =>
-							!x.Verified
-							&& x.Analyzed
-							&& (x.MultiFile == true)
-							&& x.TorrentDataFile.Any(y => y.Filename == null));
+							!x.IsVerified
+							&& x.IsAnalyzed
+							&& (x.IsMultiFile == true)
+							&& x.TorrentDataFiles.Any(y => y.Filename == null));
 			var total = baseQuery.Count();
 
 			var parser = new BencodeParser();
@@ -64,8 +64,8 @@ namespace Oliver.Services {
 
 						//	var movieFile = torrent.Files.OrderByDescending(x => x.FileSize).First();
 
-						var movieFile = torrentFile.TorrentDataFile.OrderByDescending(x => x.Size).First();
-						var otherFiles = torrentFile.TorrentDataFile.OrderByDescending(x => x.Size).Skip(1);
+						var movieFile = torrentFile.TorrentDataFiles.OrderByDescending(x => x.Size).First();
+						var otherFiles = torrentFile.TorrentDataFiles.OrderByDescending(x => x.Size).Skip(1);
 
 						foreach (var folder in folders) {
 							var movieFilePath = Path.Combine(folder, movieFile.Filename);
@@ -76,7 +76,7 @@ namespace Oliver.Services {
 							// Make folders for files
 							// TODO: combined is temporary, make better folder management
 							var basePath = $"{Path.GetDirectoryName(folder)}-combined";
-							foreach (var file in torrentFile.TorrentDataFile) {
+							foreach (var file in torrentFile.TorrentDataFiles) {
 								var tempPath = Path.Combine(basePath, file.PartialFolder);
 								if (!Directory.Exists(tempPath)) {
 									Directory.CreateDirectory(tempPath);
