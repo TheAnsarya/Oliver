@@ -1,20 +1,17 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
-using BencodeNET.Parsing;
 using BencodeNET.Torrents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Oliver.Constants;
-using Oliver.Data;
 using Oliver.Domain;
 using Oliver.Domain.Services;
-using Oliver.Domain.YTS.Requests;
-using Oliver.Domain.YTS.Responses;
+using Oliver.Domain.Streams;
+using Oliver.Domain.Torrents;
 using Oliver.Extensions;
 using Oliver.Services.Interfaces;
 
@@ -22,16 +19,17 @@ namespace Oliver.Services {
 	public class TorrentService : ITorrentService {
 		private const int PIECE_HASH_STRING_SIZE = 40;
 
-		private readonly IConfiguration _config;
 
-		private readonly ILogger _logger;
+		private IConfiguration Config { get; }
 
-		private readonly IHashService _hasher;
+		private ILogger Logger { get; }
+
+		private IHashService Hasher { get; }
 
 		public TorrentService(IConfiguration config, ILogger logger, IHashService hasher) {
-			_config = config;
-			_logger = logger;
-			_hasher = hasher;
+			Config = config;
+			Logger = logger;
+			Hasher = hasher;
 		}
 
 		// We are assuming the that torrent, if analyzed, is properly represented in the torrentdatafiles
@@ -48,7 +46,7 @@ namespace Oliver.Services {
 			 *				******* use torrentdata files instead
 			 * [ ]	(verify full match)
 			 *				******* use torrentdata files instead
-			 * [ ]	generate pieces hash from datafiles
+			 * [x]	generate pieces hash from datafiles
 			 * [ ]	add file-part list to pieces as made (which file, start of read, end of read)
 			 * [ ]	compare pieces
 			 * [ ]		all match == torrentfile is verified
@@ -99,66 +97,130 @@ namespace Oliver.Services {
 		public async Task<TorrentVerification> VerifyTorrent(Torrent torrent, string folderName) {
 			if (torrent == null) {
 				throw new ArgumentNullException(nameof(torrent));
-			} else if (torrent.FileMode != TorrentFileMode.Multi) {
-				// TODO: Implement single file checking although we aren't using it here
-				throw new ArgumentException("Only handles multi-file torrents for now.", nameof(torrent));
-			} else if (!Directory.Exists(folderName)) {
+			}
+
+			if (folderName == null) {
+				throw new ArgumentNullException(nameof(folderName));
+			}
+
+			if (!Directory.Exists(folderName)) {
 				throw new ArgumentException("Directory does not exist.", nameof(folderName));
 			}
 
+			// TODO: Implement single file checking although we aren't using it here
+			if (torrent.FileMode != TorrentFileMode.Multi) {
+				throw new ArgumentException("Only handles multi-file torrents for now.", nameof(torrent));
+			}
+
+			// Ensure folder path ends with separator, so "c:\working\" not "c:\working"
 			if (!folderName.EndsWith(Path.DirectorySeparatorChar)) {
 				folderName = $"{folderName}{Path.DirectorySeparatorChar}";
 			}
 
+			// Check for missing and extra (unknown) files in the folder
 			var filenames = torrent.Files.Select(x => Path.Combine(folderName, x.FullPath));
-
-			var filenameChecks =
-				filenames
-					.Select(x => File.Exists(x))
-					.ToArray();
-
 			var filesInFolder = Directory.GetFiles(folderName, "*", SearchOption.AllDirectories);
+			//var files =
+			//	torrent.Files
+			//		.Select(x => new {
+			//			ExpectedSize = x.FileSize,
+			//			FileName = x.FullPath,
+			//			FileNameFull = Path.Combine(folderName, x.FullPath),
+
+			//		})
+			//		.Select(x => new FileMatch {
+			//			 ExpectedSize = x.FileSize,
+			//			 FileName = x.FullPath,
+			//			 FileNameFull = Path.Combine(folderName, x.FullPath),
+
+			//		 });
 
 			var unknownFiles =
 				filesInFolder
 					.Where(x => !filenames.Contains(x))
-					.Select(x => x.Substring(folderName.Length))
+					.Select(x => x[folderName.Length..])
 					.ToArray();
 
-			var pieceHashes =
-				torrent.PiecesAsHexString
-					.Split(PIECE_HASH_STRING_SIZE);
+			var missingFiles =
+				filenames
+					.Where(x => !filesInFolder.Contains(x))
+					.Select(x => x[folderName.Length..])
+					.ToArray();
 
+			var missingFilesFlagged =
+				filenames
+					.Select(x => filesInFolder.Contains(x))
+					.ToArray();
 
-			foreach (var filename in filenames) {
+			var badFiles = torrent.Files.Select(x => x.FileSize);
+
+			//var pieceStringHashes =
+			//	torrent.PiecesAsHexString
+			//		.Split(PIECE_HASH_STRING_SIZE);
+
+			// TODO: should we switch to Memory<byte> and get rid of PieceHash?
+			var torrentPieces = new PieceSet(new PieceSize(torrent.PieceSize), torrent.Pieces);
+			var testedPieces = await GetDataPieces(filenames.ToArray(), new PieceSize(torrent.PieceSize));
+
+			if (torrentPieces.Pieces.Count != testedPieces.Pieces.Count) {
+
+			} else if (torrent.Pieces.IsSame(testedPieces.FullHash)) {
+
+			} else {
 
 			}
+
 
 
 
 
 			return new TorrentVerification {
-				Filenames = filenameChecks,
-				Files = ,
+				Filenames = missingFilesFlagged,
+				//Files = ,
 				UnknownFiles = unknownFiles,
-				Pieces = ,
+				//Pieces = ,
 			};
 		}
 
-		private IEnumerable<byte[]> GetDataPieces(string[] filenames, int pieceLength) {
+		private async Task<PieceSet> GetDataPieces(string[] filenames, PieceSize size) {
 			if (filenames == null) {
 				throw new ArgumentNullException(nameof(filenames));
-			} else if (pieceLength < 1) {
-				throw new ArgumentOutOfRangeException("Length must be greater than zero.", nameof(pieceLength));
 			}
 
+			var files = FileNamesToInfo(filenames);
 
-
-			for (int i = 0; i < input.Length; i += length) {
-				yield return input.Substring(i, Math.Min(length, input.Length - i));
-			}
-
+			return await GetDataPieces(files, size);
 		}
 
+		private async Task<PieceSet> GetDataPieces(List<FileInfo> files, PieceSize size) {
+			if (files == null) {
+				throw new ArgumentNullException(nameof(files));
+			}
+
+			if (files.Any(x => !x.Exists)) {
+				throw new ArgumentException("Not all of the files exist.", nameof(files));
+			}
+
+			var totalFileLength = files.Sum(x => x.Length);
+			var piecesSet = new PieceSet(size, size.ExpectedPieces(totalFileLength));
+
+			using var stream = new MuliFileStream(files);
+			var buffer = ArrayPool<byte>.Shared.Rent(size.Size);
+
+			while (!stream.Done) {
+				var read = await stream.ReadAsync(buffer.AsMemory(0, size.Size));
+
+				if (read != 0) {
+					var hash = await Hasher.GetSHA1(read < size.Size ? buffer.AsMemory(0, read).ToArray() : buffer);
+					piecesSet.Pieces.Add(new PieceHash(hash));
+				}
+			}
+
+			ArrayPool<byte>.Shared.Return(buffer);
+
+			return piecesSet;
+		}
+
+		private static List<FileInfo> FileNamesToInfo(string[] filenames) => filenames.Select(x => new FileInfo(x)).ToList();
 	}
 }

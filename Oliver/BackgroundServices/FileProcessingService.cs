@@ -12,48 +12,48 @@ using Oliver.Services.Interfaces;
 
 namespace Oliver.BackgroundServices {
 	public class FileProcessingService : BackgroundService {
-		private readonly ILogger<FileProcessingService> _logger;
-		private readonly ServicesOptions _settings;
-		private readonly FoldersOptions _folderSettings;
-		private readonly IHashService _hasher;
-		private readonly OliverContext _context;
+		private ILogger<FileProcessingService> Logger { get; }
+		private OliverContext Context { get; }
+		private IHashService Hasher { get; }
+		private ServicesOptions Settings { get; }
+		private FoldersOptions FolderSettings { get; }
 
-		public FileProcessingService(ILogger<FileProcessingService> logger, IHashService hasher, OliverContext context, IOptions<ServicesOptions> settings, IOptions<FoldersOptions> folderSettings) {
-			_logger = logger;
-			_hasher = hasher;
-			_context = context;
-			_settings = settings.Value;
-			_folderSettings = folderSettings.Value;
+		public FileProcessingService(ILogger<FileProcessingService> logger, OliverContext context, IHashService hasher, IOptions<ServicesOptions> settings, IOptions<FoldersOptions> folderSettings) {
+			Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			Context = context ?? throw new ArgumentNullException(nameof(context));
+			Hasher = hasher ?? throw new ArgumentNullException(nameof(hasher));
+			Settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
+			FolderSettings = folderSettings?.Value ?? throw new ArgumentNullException(nameof(folderSettings));
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-			_logger.LogDebug($"{nameof(FileProcessingService)} is starting.");
+			Logger.LogDebug($"{nameof(FileProcessingService)} is starting.");
 
 			stoppingToken.Register(() =>
-				_logger.LogDebug($"{nameof(FileProcessingService)} background task is stopping."));
+				Logger.LogDebug($"{nameof(FileProcessingService)} background task is stopping."));
 
 			while (!stoppingToken.IsCancellationRequested) {
-				_logger.LogDebug($"{nameof(FileProcessingService)} task doing background work.");
+				Logger.LogDebug($"{nameof(FileProcessingService)} task doing background work.");
 
 				//
 
-				await Task.Delay(_settings.CheckUpdateTime, stoppingToken);
+				await Task.Delay(Settings.CheckUpdateTime, stoppingToken);
 			}
 
-			_logger.LogDebug($"{nameof(FileProcessingService)} background task is stopping.");
+			Logger.LogDebug($"{nameof(FileProcessingService)} background task is stopping.");
 		}
 
 		// TODO: Switch to matching to datafiles?
 		private async Task FindFiles() {
-			var dataFiles = _context.TorrentDataFiles
+			var dataFiles = Context.TorrentDataFiles
 				.Where(x => x.DataFile == null)
 				.OrderBy(x => x.LastFindAttempt)
-				.Take(_settings.FindFilesBatchSize)
+				.Take(Settings.FindFilesBatchSize)
 				.ToList();
 
 			foreach (var item in dataFiles) {
 				item.LastFindAttempt = DateTime.Now;
-				foreach (var basefolder in _folderSettings.Complete) {
+				foreach (var basefolder in FolderSettings.Complete) {
 					var path = Path.Combine(basefolder, item.PartialPath);
 					var file = new FileInfo(path);
 					if (file.Exists && (file.Length == item.Size)) {
@@ -61,7 +61,7 @@ namespace Oliver.BackgroundServices {
 					}
 				}
 
-				await _context.SaveChangesAsync();
+				await Context.SaveChangesAsync();
 			}
 		}
 	}

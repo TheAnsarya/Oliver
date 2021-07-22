@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Oliver.Domain.Config {
+﻿namespace Oliver.Domain.Config {
 	public class ServicesOptions {
 		public const string SectionName = "Services";
 

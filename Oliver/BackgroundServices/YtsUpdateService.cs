@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -12,32 +10,32 @@ using Oliver.Services.Interfaces;
 
 namespace Oliver.BackgroundServices {
 	public class YtsUpdateService : BackgroundService {
-		private readonly ILogger<YtsUpdateService> _logger;
-		private readonly OliverContext _context;
-		private readonly IYtsService _ytsService;
-		private readonly ServicesOptions _settings;
+		private ILogger<YtsUpdateService> Logger { get; }
+		private OliverContext Context { get; }
+		private IYtsService YtsService { get; }
+		private ServicesOptions Settings { get; }
 
 		public YtsUpdateService(ILogger<YtsUpdateService> logger, OliverContext context, IYtsService ytsService, IOptions<ServicesOptions> settings) {
-			_logger = logger;
-			_context = context;
-			_ytsService = ytsService;
-			_settings = settings.Value;
+			Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			Context = context ?? throw new ArgumentNullException(nameof(context));
+			YtsService = ytsService ?? throw new ArgumentNullException(nameof(ytsService));
+			Settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-			_logger.LogDebug($"{nameof(YtsUpdateService)} is starting.");
+			Logger.LogDebug($"{nameof(YtsUpdateService)} is starting.");
 
-			stoppingToken.Register(() => _logger.LogDebug($"{nameof(YtsUpdateService)} background task is stopping."));
+			stoppingToken.Register(() => Logger.LogDebug($"{nameof(YtsUpdateService)} background task is stopping."));
 
 			while (!stoppingToken.IsCancellationRequested) {
-				_logger.LogDebug($"{nameof(YtsUpdateService)} task doing background work.");
+				Logger.LogDebug($"{nameof(YtsUpdateService)} task doing background work.");
 
 				await UpdateYts();
 
-				await Task.Delay(_settings.YtsUpdateDelay, stoppingToken);
+				await Task.Delay(Settings.YtsUpdateDelay, stoppingToken);
 			}
 
-			_logger.LogDebug($"{nameof(YtsUpdateService)} background task is stopping.");
+			Logger.LogDebug($"{nameof(YtsUpdateService)} background task is stopping.");
 		}
 
 		private async Task UpdateYts() {

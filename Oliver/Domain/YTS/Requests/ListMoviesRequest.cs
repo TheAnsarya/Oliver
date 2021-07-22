@@ -25,9 +25,10 @@ namespace Oliver.Domain.YTS.Requests {
 		public int Limit {
 			get => _limit;
 			set {
-				if ((value < 1) || (value > 50)) {
+				if (value is < 1 or > 50) {
 					throw new ArgumentOutOfRangeException(nameof(value));
 				}
+
 				_limit = value;
 			}
 		}
@@ -70,9 +71,10 @@ namespace Oliver.Domain.YTS.Requests {
 		public int MinimumRating {
 			get => _minimumRating;
 			set {
-				if ((value < 0) || (value > 9)) {
+				if (value is < 0 or > 9) {
 					throw new ArgumentOutOfRangeException(nameof(value));
 				}
+
 				_minimumRating = value;
 			}
 		}

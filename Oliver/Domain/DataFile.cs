@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace Oliver.Domain {
 	public class DataFile : Entity {

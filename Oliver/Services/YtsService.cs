@@ -154,7 +154,7 @@ namespace Oliver.Services {
 			if (torrent == null) {
 				torrentFile.AnalyzedStatus = TorrentAnalyzedStatus.NotParsable;
 
-			} else { 
+			} else {
 				torrentFile.IsMultiFile = torrent.FileMode == TorrentFileMode.Multi;
 				torrentFile.PieceSize = (int)torrent.PieceSize;
 				torrentFile.Pieces = torrent.Pieces;

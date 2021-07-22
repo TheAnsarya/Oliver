@@ -12,25 +12,25 @@ using Oliver.Services.Interfaces;
 
 namespace Oliver.BackgroundServices {
 	public class FileHashingService : BackgroundService {
-		private readonly ILogger<FileHashingService> _logger;
-		private readonly OliverContext _context;
-		private readonly IHashService _hasher;
-		private readonly ServicesOptions _settings;
+		private ILogger<FileHashingService> Logger { get; }
+		private OliverContext Context { get; }
+		private IHashService Hasher { get; }
+		private ServicesOptions Settings { get; }
 
 		public FileHashingService(ILogger<FileHashingService> logger, OliverContext context, IHashService hasher, IOptions<ServicesOptions> settings) {
-			_logger = logger;
-			_context = context;
-			_hasher = hasher;
-			_settings = settings.Value;
+			Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			Context = context ?? throw new ArgumentNullException(nameof(context));
+			Hasher = hasher ?? throw new ArgumentNullException(nameof(hasher));
+			Settings = settings?.Value ?? throw new ArgumentNullException(nameof(settings));
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-			_logger.LogDebug($"{nameof(FileHashingService)} is starting.");
+			Logger.LogDebug($"{nameof(FileHashingService)} is starting.");
 
-			stoppingToken.Register(() => _logger.LogDebug($"{nameof(FileHashingService)} background task is stopping."));
+			_ = stoppingToken.Register(() => Logger.LogDebug($"{nameof(FileHashingService)} background task is stopping."));
 
 			while (!stoppingToken.IsCancellationRequested) {
-				_logger.LogDebug($"{nameof(FileHashingService)} task doing background work.");
+				Logger.LogDebug($"{nameof(FileHashingService)} task doing background work.");
 
 				await HashFiles();
 
@@ -40,37 +40,39 @@ namespace Oliver.BackgroundServices {
 				if (HashesLeft > 0) {
 					await Task.Yield();
 				} else {
-					await Task.Delay(_settings.CheckUpdateTime, stoppingToken);
+					await Task.Delay(Settings.CheckUpdateTime, stoppingToken);
 				}
 			}
 
-			_logger.LogDebug($"{nameof(FileHashingService)} background task is stopping.");
+			Logger.LogDebug($"{nameof(FileHashingService)} background task is stopping.");
 		}
 
-		private int HashesLeft => _context.DataFiles.Where(x => x.MD5 == null).Count();
+		private int HashesLeft => Context.DataFiles.Where(x => x.MD5 == null).Count();
 
 		// TODO: handle errors
 		private async Task HashFiles() {
-			var dataFiles = _context.DataFiles
+			var dataFiles = Context.DataFiles
 				.Where(x => x.MD5 == null)
 				.OrderBy(x => x.LastHashAttempt)
-				.Take(_settings.HashFilesBatchSize)
+				.Take(Settings.HashFilesBatchSize)
 				.ToList();
 
 			foreach (var item in dataFiles) {
 				item.LastHashAttempt = DateTime.Now;
-				await _context.SaveChangesAsync();
+				await Context.SaveChangesAsync();
 
 				// TODO: handle when file is missing
-				var stream = File.OpenRead(item.FilePath);
+				if (File.Exists(item.FilePath)) {
+					using var stream = File.OpenRead(item.FilePath);
 
-				var hashes = await _hasher.GetAll(stream);
+					var hashes = await Hasher.GetAll(stream);
 
-				item.MD5 = hashes.MD5;
-				item.SHA1 = hashes.SHA1;
-				item.SHA256 = hashes.SHA256;
+					item.MD5 = hashes.MD5;
+					item.SHA1 = hashes.SHA1;
+					item.SHA256 = hashes.SHA256;
 
-				await _context.SaveChangesAsync();
+					await Context.SaveChangesAsync();
+				}
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Oliver.Constants;
 
 namespace Oliver.Domain.Services {
@@ -15,11 +14,11 @@ namespace Oliver.Domain.Services {
 
 		public List<DataFile> BadDataFiles { get; set; }
 
-		public bool AllPiecesMatched { get => Pieces.All(x => x); }
+		public bool AllPiecesMatched => Pieces.All(x => x);
 
-		public bool FilenamesMatch { get => Filenames.All(x => x); }
+		public bool FilenamesMatch => Filenames.All(x => x);
 
-		public bool HasUnknownFiles { get => UnknownFiles.Count() > 0; }
+		public bool HasUnknownFiles => UnknownFiles.Length > 0;
 
 		// Files in order indicating if the files exist
 		public bool[] Filenames { get; set; }
