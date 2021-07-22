@@ -7,26 +7,28 @@ using BencodeNET.Parsing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Oliver.Constants;
 using Oliver.Data;
+using Oliver.Exceptions;
 using Oliver.Services.Interfaces;
 
 namespace Oliver.Services {
 	public class CleanupService : ICleanupService {
-		private const int BATCH_SIZE = 100;
+		private const int BatchSize = 100;
+
+		private readonly ILogger Logger;
+
+		private readonly OliverContext Context;
 
 		private readonly IConfiguration _config;
 
-		private readonly ILogger _logger;
+		private readonly IHttpClientFactory ClientFactory;
 
-		private readonly IHttpClientFactory _clientFactory;
-
-		private readonly OliverContext _context;
-
-		public CleanupService(IConfiguration config, ILogger logger, IHttpClientFactory clientFactory, OliverContext context) {
+		public CleanupService(ILogger logger, OliverContext context, IConfiguration config, IHttpClientFactory clientFactory) {
+			Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			Context = context ?? throw new ArgumentNullException(nameof(context));
 			_config = config;
-			_logger = logger;
-			_clientFactory = clientFactory;
-			_context = context;
+			ClientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
 		}
 
 		public async Task AddFoldersAndExtras() {
@@ -36,12 +38,12 @@ namespace Oliver.Services {
 			var skip = 0;
 			var errors = 0;
 			var baseQuery =
-				_context.TorrentFiles
-						.Where(x =>
-							!x.IsVerified
-							&& x.IsAnalyzed
-							&& (x.IsMultiFile == true)
-							&& x.TorrentDataFiles.Any(y => y.Filename == null));
+				Context.TorrentFiles
+					.Where(x =>
+						!x.IsVerified
+						&& x.AnalyzedStatus == TorrentAnalyzedStatus.Analyzed
+						&& (x.IsMultiFile == true)
+						&& x.TorrentDataFiles.Any(y => y.Filename == null));
 			var total = baseQuery.Count();
 
 			var parser = new BencodeParser();
@@ -51,7 +53,7 @@ namespace Oliver.Services {
 					baseQuery
 						.Include("DataFiles")
 						.Skip(skip)
-						.Take(BATCH_SIZE)
+						.Take(BatchSize)
 						.ToList();
 
 				foreach (var torrentFile in torrentFiles) {
@@ -91,23 +93,18 @@ namespace Oliver.Services {
 								File.Move(movieFilePath, newMoviePath);
 							}
 						}
-
-
-
-
 					} catch (Exception ex) {
-						_logger.LogError(ex, $"Cannot verify torrent {torrentFile.Hash}");
+						Logger.LogError(ex, $"Cannot verify torrent {torrentFile.Hash}");
 
 						if (++errors > 100) {
 							var msg = $"Too many errors, aborting command {nameof(AddFoldersAndExtras)}";
-							_logger.LogError(msg);
-							throw new Exception(msg);
+							Logger.LogError(msg);
+							throw new TooManyErrorsException(msg);
 						}
-
 					}
 				}
 
-				skip += BATCH_SIZE;
+				skip += BatchSize;
 			}
 		}
 	}

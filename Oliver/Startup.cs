@@ -13,44 +13,38 @@ using Oliver.Services.Interfaces;
 
 namespace Oliver {
 	public class Startup {
-		public Startup(IConfiguration configuration) {
-			Configuration = configuration;
-		}
+		public Startup(IConfiguration configuration) => Configuration = configuration;
 
 		public IConfiguration Configuration { get; }
 
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) {
 			// Config options from appsettings.json
-			services.Configure<YtsOptions>(Configuration.GetSection(YtsOptions.SectionName));
-			services.Configure<FoldersOptions>(Configuration.GetSection(FoldersOptions.SectionName));
+			_ = services
+				.Configure<YtsOptions>(Configuration.GetSection(YtsOptions.SectionName))
+				.Configure<FoldersOptions>(Configuration.GetSection(FoldersOptions.SectionName));
 
-			services.AddHttpClient();
+			_ = services.AddHttpClient();
 
-			services.AddDbContext<OliverContext>();
+			_ = services.AddDbContext<OliverContext>();
 
-			services.AddControllers(options => {
-				options.Filters.Add(typeof(ExceptionFilter));
-			});
+			_ = services.AddControllers(options => options.Filters.Add(typeof(ExceptionFilter)));
 
 			// Allow requests from react app
-			services.AddCors(options => {
-				options.AddDefaultPolicy(builder => {
-					builder
-						.AllowAnyOrigin()
-						.AllowAnyHeader()
-						.AllowAnyMethod();
-				});
-			});
+			_ = services.AddCors(options =>
+					options.AddDefaultPolicy(builder =>
+						builder
+							.AllowAnyOrigin()
+							.AllowAnyHeader()
+							.AllowAnyMethod()));
 
-			services.AddSwaggerGen(c => {
-				c.SwaggerDoc("v1", new OpenApiInfo { Title = "Oliver", Version = "v1" });
-			});
+			services.AddSwaggerGen(c => c.SwaggerDoc("v1", new OpenApiInfo { Title = "Oliver", Version = "v1" }));
 
-			services.AddScoped<ICleanupService, CleanupService>();
-			services.AddScoped<IHashService, HashService>();
-			services.AddScoped<ITorrentService, TorrentService>();
-			services.AddScoped<IYtsService, YtsService>();
+			_ = services
+				.AddScoped<ICleanupService, CleanupService>()
+				.AddScoped<IHashService, HashService>()
+				.AddScoped<ITorrentService, TorrentService>()
+				.AddScoped<IYtsService, YtsService>();
 
 			// Background services
 			services.AddHostedService<FileProcessingService>();
@@ -60,22 +54,18 @@ namespace Oliver {
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
 			if (env.IsDevelopment()) {
-				app.UseDeveloperExceptionPage();
-				app.UseSwagger();
-				app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Oliver v1"));
+				_ = app
+					.UseDeveloperExceptionPage()
+					.UseSwagger()
+					.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Oliver v1"));
 			}
 
-			app.UseHttpsRedirection();
-
-			app.UseRouting();
-
-			app.UseCors();
-
-			app.UseAuthorization();
-
-			app.UseEndpoints(endpoints => {
-				endpoints.MapControllers();
-			});
+			_ = app
+				.UseHttpsRedirection()
+				.UseRouting()
+				.UseCors()
+				.UseAuthorization()
+				.UseEndpoints(endpoints => endpoints.MapControllers());
 		}
 	}
 }

@@ -93,7 +93,7 @@ namespace Oliver.Domain.Streams {
 
 			return result;
 		}
-		public async override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
+		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) {
 			// Short circuit when nothing left to read
 			if (Done) {
 				return 0;

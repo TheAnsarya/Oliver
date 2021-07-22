@@ -10,6 +10,6 @@ namespace Oliver.Domain.Config {
 
 		public List<string> VideoOnly { get; set; }
 
-		public Torrents Torrents { get; set; }
+		public TorrentsConfig Torrents { get; set; }
 	}
 }

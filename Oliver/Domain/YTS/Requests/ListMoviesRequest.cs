@@ -7,21 +7,21 @@ using System.Web;
 namespace Oliver.Domain.YTS.Requests {
 	// TODO: A lot of this class seems templatable.
 	public class ListMoviesRequest {
-		public const int DEFAULT_LIMIT = 20;
-		public const int DEFAULT_PAGE = 20;
-		public const string DEFAULT_QUALITY = "All";
-		public const int DEFAULT_MINIMUM_RATING = 0;
-		public const string DEFAULT_QUERY_TERM = "0";
-		public const string DEFAULT_GENRE = "All";
-		public const string DEFAULT_SORT_BY = "date_added";
-		public const string DEFAULT_ORDER_BY = "desc";
-		public const bool DEFAULT_WITH_RT_RATINGS = false;
+		public const int DefaultLimit = 20;
+		public const int DefaultPage = 20;
+		public const string DefaultQuality = "All";
+		public const int DefaultMinimumRating = 0;
+		public const string DefaultQueryTerm = "0";
+		public const string DefaultGenre = "All";
+		public const string DefaultSortBy = "date_added";
+		public const string DefaultOrderBy = "desc";
+		public const bool DefaultWithRTRatings = false;
 
 		// The limit of results per page that has been set
 		// between 1 - 50 (inclusive)
 		// Default: 20
 		// Query parameter: limit
-		private int _limit = DEFAULT_LIMIT;
+		private int _limit = DefaultLimit;
 		public int Limit {
 			get => _limit;
 			set {
@@ -37,13 +37,14 @@ namespace Oliver.Domain.YTS.Requests {
 		// Integer(Unsigned)
 		// Default: 1
 		// Query parameter: page
-		private int _page = DEFAULT_PAGE;
+		private int _page = DefaultPage;
 		public int Page {
 			get => _page;
 			set {
 				if (value < 1) {
 					throw new ArgumentOutOfRangeException(nameof(value));
 				}
+
 				_page = value;
 			}
 		}
@@ -52,13 +53,14 @@ namespace Oliver.Domain.YTS.Requests {
 		// String(720p, 1080p, 2160p, 3D) 
 		// Default: "All"
 		// Query parameter: quality
-		private string _quality = DEFAULT_QUALITY;
+		private string _quality = DefaultQuality;
 		public string Quality {
 			get => _quality;
 			set {
 				if (!(new string[] { "720p", "1080p", "2160p", "3D", "All" }).Contains(value)) {
 					throw new ArgumentOutOfRangeException(nameof(value));
 				}
+
 				_quality = value;
 			}
 		}
@@ -67,7 +69,7 @@ namespace Oliver.Domain.YTS.Requests {
 		// Integer between 0 - 9 (inclusive)
 		// Default: 0
 		// Query parameter: minimum_rating
-		private int _minimumRating = DEFAULT_MINIMUM_RATING;
+		private int _minimumRating = DefaultMinimumRating;
 		public int MinimumRating {
 			get => _minimumRating;
 			set {
@@ -83,25 +85,26 @@ namespace Oliver.Domain.YTS.Requests {
 		// String
 		// Default: "0"
 		// Query parameter: query_term
-		public string QueryTerm { get; set; } = DEFAULT_QUERY_TERM;
+		public string QueryTerm { get; set; } = DefaultQueryTerm;
 
 		// Used to filter by a given genre (See http://www.imdb.com/genre/ for full list)
 		// String
 		// Default: "All"
 		// Query parameter: genre
-		public string Genre { get; set; } = DEFAULT_GENRE;
+		public string Genre { get; set; } = DefaultGenre;
 
 		// Sorts the results by choosen value
 		// String (title, year, rating, peers, seeds, download_count, like_count, date_added)
 		// Default: "date_added"
 		// Query parameter: sort_by
-		private string _sortBy = DEFAULT_SORT_BY;
+		private string _sortBy = DefaultSortBy;
 		public string SortBy {
 			get => _sortBy;
 			set {
 				if (!(new string[] { "title", "year", "rating", "peers", "seeds", "download_count", "like_count", "date_added" }).Contains(value)) {
 					throw new ArgumentOutOfRangeException(nameof(value));
 				}
+
 				_sortBy = value;
 			}
 		}
@@ -110,13 +113,14 @@ namespace Oliver.Domain.YTS.Requests {
 		// String (desc, asc)
 		// Default: "desc"
 		// Query parameter: order_by
-		private string _orderBy = DEFAULT_ORDER_BY;
+		private string _orderBy = DefaultOrderBy;
 		public string OrderBy {
 			get => _orderBy;
 			set {
-				if (!(new string[] { "desc", "asc" }).Contains(value)) {
+				if (value is not "desc" and not "asc") {
 					throw new ArgumentOutOfRangeException(nameof(value));
 				}
+
 				_orderBy = value;
 			}
 		}
@@ -125,36 +129,44 @@ namespace Oliver.Domain.YTS.Requests {
 		// Boolean
 		// Default: false
 		// Query parameter: with_rt_ratings
-		public bool WithRtRatings { get; set; } = DEFAULT_WITH_RT_RATINGS;
+		public bool WithRtRatings { get; set; } = DefaultWithRTRatings;
 
 		public string QueryString() {
 			var parameters = new Dictionary<string, string>();
 
-			if (Limit != DEFAULT_LIMIT) {
+			if (Limit != DefaultLimit) {
 				parameters.Add("limit", Limit.ToString(CultureInfo.InvariantCulture));
 			}
-			if (Page != DEFAULT_PAGE) {
+
+			if (Page != DefaultPage) {
 				parameters.Add("page", Page.ToString(CultureInfo.InvariantCulture));
 			}
-			if (Quality != DEFAULT_QUALITY) {
+
+			if (Quality != DefaultQuality) {
 				parameters.Add("quality", Quality);
 			}
-			if (MinimumRating != DEFAULT_MINIMUM_RATING) {
+
+			if (MinimumRating != DefaultMinimumRating) {
 				parameters.Add("minimum_rating", MinimumRating.ToString(CultureInfo.InvariantCulture));
 			}
-			if (QueryTerm != DEFAULT_QUERY_TERM) {
+
+			if (QueryTerm != DefaultQueryTerm) {
 				parameters.Add("query_term", QueryTerm);
 			}
-			if (Genre != DEFAULT_GENRE) {
+
+			if (Genre != DefaultGenre) {
 				parameters.Add("genre", Genre);
 			}
-			if (SortBy != DEFAULT_SORT_BY) {
+
+			if (SortBy != DefaultSortBy) {
 				parameters.Add("sort_by", SortBy);
 			}
-			if (OrderBy != DEFAULT_ORDER_BY) {
+
+			if (OrderBy != DefaultOrderBy) {
 				parameters.Add("order_by", OrderBy);
 			}
-			if (WithRtRatings != DEFAULT_WITH_RT_RATINGS) {
+
+			if (WithRtRatings != DefaultWithRTRatings) {
 				parameters.Add("with_rt_ratings", WithRtRatings.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
 			}
 

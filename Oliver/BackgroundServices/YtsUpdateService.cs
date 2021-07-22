@@ -30,7 +30,7 @@ namespace Oliver.BackgroundServices {
 			while (!stoppingToken.IsCancellationRequested) {
 				Logger.LogDebug($"{nameof(YtsUpdateService)} task doing background work.");
 
-				await UpdateYts();
+				await UpdateYts(stoppingToken);
 
 				await Task.Delay(Settings.YtsUpdateDelay, stoppingToken);
 			}
@@ -38,8 +38,9 @@ namespace Oliver.BackgroundServices {
 			Logger.LogDebug($"{nameof(YtsUpdateService)} background task is stopping.");
 		}
 
-		private async Task UpdateYts() {
-
+		private async Task UpdateYts(CancellationToken stoppingToken) {
+			// TODO: do actual work
+			await Task.Delay(Settings.YtsUpdateDelay, stoppingToken);
 		}
 	}
 }

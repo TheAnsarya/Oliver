@@ -90,8 +90,10 @@ namespace Oliver.Services {
 					BadDataFiles = badDataFiles,
 				};
 			}
-
-
+			// TODO: return real value
+			return new TorrentVerification {
+				Status = TorrentVerificationStatus.TorrentCannotBeParsed
+			};
 		}
 
 		public async Task<TorrentVerification> VerifyTorrent(Torrent torrent, string folderName) {

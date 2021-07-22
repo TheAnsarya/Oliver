@@ -6,7 +6,7 @@ namespace Oliver.Domain.YTS.Responses {
 		[JsonPropertyName("status")]
 		public string Status { get; set; }
 
-		public bool IsOK { get => Status == "ok"; }
+		public bool IsOK => Status == "ok";
 
 		[JsonPropertyName("status_message")]
 		public string StatusMessage { get; set; }

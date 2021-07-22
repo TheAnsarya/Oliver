@@ -33,6 +33,10 @@ namespace Oliver.Domain {
 		public TorrentInfo() : base() { }
 
 		public TorrentInfo(YtsTorrentInfo dto, Movie movie) {
+			if (dto is null) {
+				throw new ArgumentNullException(nameof(dto));
+			}
+
 			Url = dto.Url;
 			Hash = dto.Hash;
 			Quality = dto.Quality;
@@ -48,12 +52,9 @@ namespace Oliver.Domain {
 
 		// Equality
 
-		public override bool Equals(object obj) {
-			return Equals(obj as TorrentInfo);
-		}
+		public override bool Equals(object obj) => Equals(obj as TorrentInfo);
 
-		public bool Equals(TorrentInfo other) {
-			return other != null &&
+		public bool Equals(TorrentInfo other) => other != null &&
 				   Url == other.Url &&
 				   Hash == other.Hash &&
 				   Quality == other.Quality &&
@@ -62,19 +63,12 @@ namespace Oliver.Domain {
 				   SizeBytes == other.SizeBytes &&
 				   DateUploaded == other.DateUploaded &&
 				   DateUploadedUnix == other.DateUploadedUnix;
-		}
 
-		public override int GetHashCode() {
-			return HashCode.Combine(Url, Hash, Quality, Type, Size, SizeBytes, DateUploaded, DateUploadedUnix);
-		}
+		public override int GetHashCode() => HashCode.Combine(Url, Hash, Quality, Type, Size, SizeBytes, DateUploaded, DateUploadedUnix);
 
-		public static bool operator ==(TorrentInfo left, TorrentInfo right) {
-			return EqualityComparer<TorrentInfo>.Default.Equals(left, right);
-		}
+		public static bool operator ==(TorrentInfo left, TorrentInfo right) => EqualityComparer<TorrentInfo>.Default.Equals(left, right);
 
-		public static bool operator !=(TorrentInfo left, TorrentInfo right) {
-			return !(left == right);
-		}
+		public static bool operator !=(TorrentInfo left, TorrentInfo right) => !(left == right);
 
 		// Update
 

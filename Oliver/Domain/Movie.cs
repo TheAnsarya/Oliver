@@ -64,6 +64,10 @@ namespace Oliver.Domain {
 		public Movie() : base() { }
 
 		public Movie(YtsMovie dto) {
+			if (dto is null) {
+				throw new ArgumentNullException(nameof(dto));
+			}
+
 			YtsId = dto.Id;
 			Url = dto.Url;
 			ImdbCode = dto.ImdbCode;
@@ -104,39 +108,35 @@ namespace Oliver.Domain {
 
 		// Equality
 
-		public override bool Equals(object obj) {
-			return Equals(obj as Movie);
-		}
+		public override bool Equals(object obj) => Equals(obj as Movie);
 
-		public bool Equals(Movie other) {
-			return other != null &&
-				   YtsId == other.YtsId &&
-				   Url == other.Url &&
-				   ImdbCode == other.ImdbCode &&
-				   Title == other.Title &&
-				   TitleEnglish == other.TitleEnglish &&
-				   TitleLong == other.TitleLong &&
-				   Slug == other.Slug &&
-				   Year == other.Year &&
-				   Rating == other.Rating &&
-				   Runtime == other.Runtime &&
-				   EqualityComparer<List<GenreString>>.Default.Equals(Genres, other.Genres) &&
-				   Summary == other.Summary &&
-				   DescriptionFull == other.DescriptionFull &&
-				   Synopsis == other.Synopsis &&
-				   YtTrailerCode == other.YtTrailerCode &&
-				   Language == other.Language &&
-				   MpaRating == other.MpaRating &&
-				   BackgroundImage == other.BackgroundImage &&
-				   BackgroundImageOriginal == other.BackgroundImageOriginal &&
-				   SmallCoverImage == other.SmallCoverImage &&
-				   MediumCoverImage == other.MediumCoverImage &&
-				   LargeCoverImage == other.LargeCoverImage &&
-				   State == other.State &&
-				   EqualityComparer<List<TorrentInfo>>.Default.Equals(Torrents, other.Torrents) &&
-				   DateUploaded == other.DateUploaded &&
-				   DateUploadedUnix == other.DateUploadedUnix;
-		}
+		public bool Equals(Movie other) => other != null &&
+			YtsId == other.YtsId &&
+			Url == other.Url &&
+			ImdbCode == other.ImdbCode &&
+			Title == other.Title &&
+			TitleEnglish == other.TitleEnglish &&
+			TitleLong == other.TitleLong &&
+			Slug == other.Slug &&
+			Year == other.Year &&
+			Rating == other.Rating &&
+			Runtime == other.Runtime &&
+			EqualityComparer<List<GenreString>>.Default.Equals(Genres, other.Genres) &&
+			Summary == other.Summary &&
+			DescriptionFull == other.DescriptionFull &&
+			Synopsis == other.Synopsis &&
+			YtTrailerCode == other.YtTrailerCode &&
+			Language == other.Language &&
+			MpaRating == other.MpaRating &&
+			BackgroundImage == other.BackgroundImage &&
+			BackgroundImageOriginal == other.BackgroundImageOriginal &&
+			SmallCoverImage == other.SmallCoverImage &&
+			MediumCoverImage == other.MediumCoverImage &&
+			LargeCoverImage == other.LargeCoverImage &&
+			State == other.State &&
+			EqualityComparer<List<TorrentInfo>>.Default.Equals(Torrents, other.Torrents) &&
+			DateUploaded == other.DateUploaded &&
+			DateUploadedUnix == other.DateUploadedUnix;
 
 		public override int GetHashCode() {
 			var hash = new HashCode();
@@ -169,13 +169,9 @@ namespace Oliver.Domain {
 			return hash.ToHashCode();
 		}
 
-		public static bool operator ==(Movie left, Movie right) {
-			return EqualityComparer<Movie>.Default.Equals(left, right);
-		}
+		public static bool operator ==(Movie left, Movie right) => EqualityComparer<Movie>.Default.Equals(left, right);
 
-		public static bool operator !=(Movie left, Movie right) {
-			return !(left == right);
-		}
+		public static bool operator !=(Movie left, Movie right) => !(left == right);
 
 		// Update
 

@@ -98,6 +98,10 @@ namespace Oliver.Services {
 		}
 
 		public async Task<TorrentFile> AddTorrentFile(TorrentInfo info) {
+			if (info is null) {
+				throw new ArgumentNullException(nameof(info));
+			}
+
 			var client = _clientFactory.CreateClient();
 			var parser = new BencodeParser();
 
@@ -142,6 +146,10 @@ namespace Oliver.Services {
 		// Returns null if torrent cannot be parsed
 		// TODO: already parsed, but not is not multi so datafiles weren't added?
 		public async Task<IList<TorrentDataFile>> AnalyzeTorrentFile(TorrentFile torrentFile) {
+			if (torrentFile is null) {
+				throw new ArgumentNullException(nameof(torrentFile));
+			}
+
 			var parser = new BencodeParser();
 			Torrent torrent = null;
 
@@ -160,7 +168,7 @@ namespace Oliver.Services {
 				torrentFile.Pieces = torrent.Pieces;
 
 				// TODO: finish fixing this method
-				if (!torrent.IsMultiFile) {
+				if (torrent.FileMode != TorrentFileMode.Multi) {
 					// TODO: possibly fix?
 					throw new NotImplementedException("Torrent is not in multi file mode.");
 				}
@@ -174,15 +182,14 @@ namespace Oliver.Services {
 				}).ToList();
 
 
-				torrentFile.IsAnalyzed = true;
+				torrentFile.AnalyzedStatus = TorrentAnalyzedStatus.Analyzed;
 
 				_context.AddRange(torrentFile.TorrentDataFiles);
 			}
 
 			await _context.SaveChangesAsync();
 
-			return dataFiles;
+			return torrentFile.TorrentDataFiles;
 		}
-
 	}
 }
