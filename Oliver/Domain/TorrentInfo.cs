@@ -22,6 +22,8 @@ namespace Oliver.Domain {
 
 		public bool Current { get; set; }
 
+		public Guid TorrentFileId { get; set; }
+
 		// Link Properties
 
 		public virtual Movie Movie { get; set; }

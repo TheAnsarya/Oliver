@@ -1,0 +1,17 @@
+# To learn more about .editorconfig see https://aka.ms/editorconfigdocs
+# Docs at: https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/style-rules/formatting-rules
+
+#
+# These rules are so entity framework migrations are not flagged since they are auto-generated
+#
+
+###############################
+# Core editorconfig options   #
+###############################
+root = true
+
+###############################
+#  C# code files              #
+###############################
+[*.cs]
+csharp_style_expression_bodied_lambdas = false

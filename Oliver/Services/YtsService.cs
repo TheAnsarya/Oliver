@@ -21,22 +21,22 @@ namespace Oliver.Services {
 	public class YtsService : IYtsService {
 		private const int BATCH_TORRENTS_SIZE = 100;
 
-		private readonly IConfiguration _config;
+		private ILogger Logger { get; }
 
-		private readonly ILogger _logger;
+		private OliverContext Context { get; }
 
-		private readonly IHttpClientFactory _clientFactory;
+		private IConfiguration Config { get; }
 
-		private readonly OliverContext _context;
+		private IHttpClientFactory ClientFactory { get; }
 
-		private readonly IHashService _hasher;
+		private IHashService Hasher { get; }
 
 		public YtsService(IConfiguration config, ILogger logger, IHttpClientFactory clientFactory, OliverContext context, IHashService hasher) {
-			_config = config;
-			_logger = logger;
-			_clientFactory = clientFactory;
-			_context = context;
-			_hasher = hasher;
+			Config = config;
+			Logger = logger;
+			ClientFactory = clientFactory;
+			Context = context;
+			Hasher = hasher;
 		}
 
 		public async Task<Response<ListMoviesData>> FetchMoviesList(ListMoviesRequest request = null) {
@@ -44,11 +44,11 @@ namespace Oliver.Services {
 				request = new ListMoviesRequest();
 			}
 
-			var baseAddress = _config["Yts:BaseAddress"];
+			var baseAddress = Config["Yts:BaseAddress"];
 			var endpoint = $"{baseAddress}api/v2/list_movies.json";
 			var url = $"{endpoint}{request.QueryString()}";
 
-			var client = _clientFactory.CreateClient();
+			using var client = ClientFactory.CreateClient();
 			var response = await client.GetStringAsync(url);
 
 			var moviesList = JsonSerializer.Deserialize<Response<ListMoviesData>>(response);
@@ -62,11 +62,11 @@ namespace Oliver.Services {
 				throw new ArgumentNullException(nameof(dto));
 			}
 
-			var movie = _context.Movies.Where(x => x.YtsId == dto.Id).FirstOrDefault();
+			var movie = Context.Movies.Where(x => x.YtsId == dto.Id).FirstOrDefault();
 
 			if (movie == null) {
 				movie = new Movie(dto);
-				_context.Add(movie);
+				Context.Add(movie);
 			} else {
 				var other = new Movie(dto);
 				if (movie == other) {
@@ -76,7 +76,7 @@ namespace Oliver.Services {
 				movie.Update(other);
 			}
 
-			await _context.SaveChangesAsync();
+			await Context.SaveChangesAsync();
 			return (movie, true);
 		}
 
@@ -102,11 +102,11 @@ namespace Oliver.Services {
 				throw new ArgumentNullException(nameof(info));
 			}
 
-			var client = _clientFactory.CreateClient();
+			using var client = ClientFactory.CreateClient();
 			var parser = new BencodeParser();
 
-			var folder = _config["Folders:Torrents:Current"];
-			var oldFolder = _config["Folders:Torrents:Old"];
+			var folder = Config["Folders:Torrents:Current"];
+			var oldFolder = Config["Folders:Torrents:Old"];
 
 			var data = await client.GetByteArrayAsync(info.Url);
 			var path = Path.Combine(folder, $"{info.Hash}.torrent");
@@ -122,7 +122,7 @@ namespace Oliver.Services {
 				await File.WriteAllBytesAsync(path, data);
 			}
 
-			var hashes = await _hasher.GetAll(data);
+			var hashes = await Hasher.GetAll(data);
 
 			var torrentFile = new TorrentFile() {
 				Content = data,
@@ -137,8 +137,8 @@ namespace Oliver.Services {
 
 			info.TorrentFile = torrentFile;
 
-			_context.Add(torrentFile);
-			await _context.SaveChangesAsync();
+			Context.Add(torrentFile);
+			await Context.SaveChangesAsync();
 
 			return torrentFile;
 		}
@@ -156,7 +156,7 @@ namespace Oliver.Services {
 			try {
 				torrent = parser.Parse<Torrent>(torrentFile.Content);
 			} catch (Exception ex) {
-				_logger.LogError(ex, $"Torrent cannot be parsed {torrentFile.Hash}");
+				Logger.LogError(ex, $"Torrent cannot be parsed {torrentFile.Hash}");
 			}
 
 			if (torrent == null) {
@@ -184,10 +184,10 @@ namespace Oliver.Services {
 
 				torrentFile.AnalyzedStatus = TorrentAnalyzedStatus.Analyzed;
 
-				_context.AddRange(torrentFile.TorrentDataFiles);
+				Context.AddRange(torrentFile.TorrentDataFiles);
 			}
 
-			await _context.SaveChangesAsync();
+			await Context.SaveChangesAsync();
 
 			return torrentFile.TorrentDataFiles;
 		}

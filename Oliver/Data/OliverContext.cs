@@ -7,7 +7,9 @@ using Oliver.Domain;
 
 namespace Oliver.Data {
 	public class OliverContext : DbContext {
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite("Data Source=oliver.db");
+		//protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite("Data Source=oliver.db");
+
+		public OliverContext(DbContextOptions<OliverContext> options) : base(options) { }
 
 		public override int SaveChanges() {
 			SaveChangesHelper();

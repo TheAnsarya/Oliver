@@ -31,6 +31,8 @@ namespace Oliver.Domain {
 
 		public bool Verified { get; set; }
 
+		public Guid DataFileId { get; set; }
+
 		// Link Properties
 
 		public virtual TorrentFile TorrentFile { get; set; }
