@@ -8,6 +8,7 @@ const authSlice = createSlice({
 		isLoading: false,
 		error: "",
 		username: "",
+		initials: "",
 	},
 	reducers: {
 		logout: (state) => {

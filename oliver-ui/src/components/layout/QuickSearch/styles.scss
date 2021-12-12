@@ -1,0 +1,49 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.quicksearch-container {
+	display: inline-block;
+	height: 40px;
+	margin-left: 14px;
+	position: relative;
+	vertical-align: super;
+	width: 360px;
+
+	.quicksearch-input-container {
+		align-items: center;
+		border-radius: 8px;
+		display: flex;
+		flex-flow: row nowrap;
+		height: 40px;
+		padding: 4px;
+		transition: all 0.4s;
+
+		.quicksearch-icon {
+			font-size: 14px;
+			margin: 4px 10px 0 18px;
+		}
+		.quicksearch-icon-close {
+			margin: 0 5px 0 10px;
+		}
+
+		.quicksearch-input {
+			background: transparent;
+			border: none;
+			flex-grow: 1;
+			height: 100%;
+			outline: 0;
+			z-index: 600;
+		}
+
+		.quicksearch-input::-ms-clear {
+			display: none;
+		}
+	}
+}
+
+@media only screen and (max-width: 768px) {
+	.quicksearch-container {
+		display: none;
+	}
+}

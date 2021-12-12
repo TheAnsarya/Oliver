@@ -1,9 +1,9 @@
 import React from "react";
 import clsx from "clsx";
 
-import Icon from "../Icon";
+import Icon from "../common/Icon";
 
-import SettingsIcon from "../../images/glyphicons/settings.svg";
+import { faCog } from "@fortawesome/free-solid-svg-icons";
 
 import "./styles.scss";
 
@@ -15,7 +15,7 @@ function SettingsButton() {
 			role="link"
 			className="settings-button button-icon link settings-icon-container"
 		>
-			<Icon className={clsx("topbar-icon", "settings-icon")} src={SettingsIcon} />
+			<Icon className={clsx("topbar-icon", "settings-icon")} iconType={faCog} />
 		</a>
 	);
 }

@@ -1,0 +1,27 @@
+@import "../../../sass/~includes.scss";
+
+.theme-dark {
+	.quicksearch-container {
+		color: $dark-text-color;
+
+		.quicksearch-input-container {
+			background: $purple-horizontal-gradient-input-bg;
+
+			.quicksearch-input {
+				color: $dark-text-color;
+			}
+
+			&.focused {
+				background: $purple-horizontal-gradient-input-focused-bg;
+
+				.quicksearch-icon {
+					color: $dark-input-text-color;
+				}
+
+				.quicksearch-input {
+					color: $dark-input-text-color;
+				}
+			}
+		}
+	}
+}

@@ -4,8 +4,8 @@
 *,
 :after,
 :before {
-	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
 }
 
@@ -20,35 +20,39 @@ html {
 }
 
 body {
-	display: flex;
-	align-items: center;
-	justify-content: center;
 	-webkit-font-smoothing: antialiased;
+	align-items: center;
 	color: $font-color;
-	font-family: $font-family;
-	overflow: hidden;
-	font-size: 14px;
-	line-height: 1.71428571;
+	display: flex;
 	fill: currentColor;
+	font-family: $font-family;
+	font-size: 14px;
+	justify-content: center;
+	line-height: 1.71428571;
+	overflow: hidden;
 }
 
-.link {
-	-webkit-user-select: none;
-	background: none;
-	border-radius: 0;
-	border: 0;
-	color: $link-color;
-	cursor: pointer;
-	margin: 0;
-	outline: none;
-	padding: 0;
-	text-align: inherit;
-	text-decoration: none;
-	touch-action: manipulation;
-	transition: color 0.2s;
-	user-select: none;
+body {
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-font-smoothing: antialiased;
+	background-color: #000;
+	color: #eee;
+	fill: currentColor;
+	font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.71428571;
+	overflow: hidden;
+}
+
+// Removes the shadow-dom arrow added to text input fields that have a datalist
+[list]::-webkit-calendar-picker-indicator {
+	display: none !important;
 }
 
 svg:not(:root) {
 	overflow: hidden;
+}
+
+.pointer {
+	cursor: pointer;
 }

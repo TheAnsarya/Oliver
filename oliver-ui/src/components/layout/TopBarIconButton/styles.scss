@@ -1,0 +1,17 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+// TODO: figure out css score so we don't need to use !important
+.topbar-icon-button {
+	align-items: center;
+	display: inline-flex;
+	font-size: 24px;
+	height: 100%;
+	padding: 0 10px !important;
+	position: relative;
+
+	.icon {
+		top: 0;
+	}
+}

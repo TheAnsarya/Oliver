@@ -1,0 +1,13 @@
+@import "../../../sass/~includes.scss";
+
+.theme-dark {
+	.account-button {
+		.account-button-arrow {
+			border-color: hsla(0, 0%, 100%, 0.7);
+		}
+
+		*:hover .account-button-arrow {
+			border-color: #fff;
+		}
+	}
+}

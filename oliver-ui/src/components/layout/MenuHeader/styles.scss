@@ -1,0 +1,15 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.menu-header {
+	@include text-select-none;
+	cursor: default;
+	max-width: 100%;
+	min-width: 0;
+	overflow: hidden !important;
+	padding: 4px 20px;
+	text-overflow: ellipsis;
+	text-transform: uppercase;
+	white-space: nowrap !important;
+}

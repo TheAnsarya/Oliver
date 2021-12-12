@@ -1,0 +1,30 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.menu {
+	.menu-pane {
+		@include border-radius(4px);
+		@include level-box-shadow;
+		padding: 8px 0;
+		transform-origin: center top;
+		transition: background 0.2s ease-out;
+
+		&.menu-small {
+			width: 120px;
+		}
+
+		&.menu-medium {
+			width: 180px;
+		}
+
+		&.menu-large {
+			width: 220px;
+		}
+
+		.menu-scrollbox {
+			max-height: 600px;
+			padding-right: 0;
+		}
+	}
+}

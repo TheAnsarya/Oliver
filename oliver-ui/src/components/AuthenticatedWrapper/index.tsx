@@ -1,23 +1,19 @@
 import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
 import { Route, Switch, useHistory } from "react-router-dom";
-import { IStoreState } from "../../redux/storeState";
 
 import Home from "../Home";
-import SideMenu from "../SideMenu";
-import TopBar from "../TopBar";
+import SideMenu from "../layout/SideMenu";
+import TopBar from "../layout/TopBar";
 
 import "./styles.scss";
 
-const AuthenticatedWrapper = () => {
+function AuthenticatedWrapper() : JSX.Element {
 	const history = useHistory();
 
-	const isLoggedIn = useSelector<IStoreState>(state => state.auth.isLoggedIn) as boolean;
-	useEffect(() => {
-		if (!isLoggedIn) {
-			history.push("/");
-		}
-	}, [isLoggedIn, history])
+	// Redirect if not logged in
+	const isLoggedIn = useAppSelector(state => state.auth.isLoggedIn);
+	useEffect(() => { if (!isLoggedIn) { history.push("/"); } }, [isLoggedIn]);
 
 	return (
 		<div id="authenticated-wrapper">

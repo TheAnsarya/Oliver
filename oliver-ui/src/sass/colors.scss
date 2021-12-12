@@ -1,13 +1,35 @@
-$white: #fff;
-$whitesmoke: #efeded;
+$white: #ffffffff;
+$whitesmoke: #efededff;
 
-$purple: #66078f;
-$light-black: rgb(31, 35, 38);
+$purple: #66078fff;
+$light-black: #1f2326ff;
 
-$input-background: hsla(0, 0%, 100%, 0.08);
+$input-background: #ffffff18;
 
-$font-color: #eee;
-
-$link-color: #ffffffb3;
+$font-color: #eeeeeeff;
 
 $link-color-svg: brightness(0) saturate(100%) invert(100%) sepia(1%) saturate(184%) hue-rotate(97deg) brightness(116%) contrast(100%) opacity(70%);
+
+
+// Used:
+$dark-green: #668e2bff;
+$dark-link-color: #ffffffb3;
+$dark-link-highlight-color: #ffffffff;
+
+
+
+// Check
+// Dark Theme
+$dark-grey-background: #3f4245;
+$dark-black-background: #181818ff;
+$dark-input-focused-background: #eee;
+$dark-input-text-color: #555;
+$dark-link-highlight-color: #fff;
+$dark-link-color: #ffffffb3;
+$dark-sidemenu-separator-color: #ccc;
+$dark-text-color: #eee;
+$dark-table-row-highlight-color: #aaa;
+$dark-sidebar-background: #fff;
+$dark-item-active-background: #b0cff3ff;
+$dark-item-hover-background: #b0cff3ff;
+$dark-form-subsection-header-line: #ccc;

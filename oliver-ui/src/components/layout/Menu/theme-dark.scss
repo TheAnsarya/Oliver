@@ -1,0 +1,10 @@
+@import "../../../sass/~includes.scss";
+
+.theme-dark {
+	.menu {
+		.menu-pane {
+			background-color: #191a1c;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+		}
+	}
+}

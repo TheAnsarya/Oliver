@@ -1,0 +1,15 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.icon {
+	// Replace `color` for individual icons on your styles
+	color: #000000ff;
+	display: inline-block;
+	fill: currentColor;
+	height: 1em;
+	line-height: 1;
+	position: relative;
+	vertical-align: middle;
+	width: 1em;
+}

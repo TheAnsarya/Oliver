@@ -10,3 +10,9 @@ $purple-vertical-up-gradient: linear-gradient(0deg, $purple 0%, $light-black 25%
 
 // quicksearch
 $purple-horizontal-gradient-input-bg: linear-gradient(90deg, $purple 0%, $input-background 25%, $input-background 100%);
+$purple-horizontal-gradient-input-focused-bg: linear-gradient(
+	90deg,
+	$purple 0%,
+	$dark-input-focused-background 25%,
+	$dark-input-focused-background 100%
+);

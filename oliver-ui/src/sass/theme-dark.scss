@@ -1,0 +1,10 @@
+@import "./colors.scss";
+@import "./mixins.scss";
+@import "./vars.scss";
+
+.theme-dark {
+	// Make `mm/dd/yyyy` in date input fields grey
+	input[value=""]::-webkit-datetime-edit-fields-wrapper {
+		color: #666 !important;
+	}
+}

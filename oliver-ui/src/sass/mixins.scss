@@ -48,3 +48,39 @@
 	-webkit-transition: $property $duration $easing;
 	-moz-transition: $property $duration $easing;
 }
+
+// @include level-box-shadow;
+@mixin level-box-shadow {
+	@include box-shadow(0, 4px, 10px, rgba(0, 0, 0, 0.35));
+}
+
+// @include small-level-box-shadow;
+@mixin small-level-box-shadow {
+	@include box-shadow(0, 2px, 6px, rgba(0, 0, 0, 0.35));
+}
+
+// @include small-level-box-shadow;
+@mixin small-level-box-shadow-light {
+	@include box-shadow(0, 2px, 6px, #33333359);
+}
+
+// @include flex-center-row;
+@mixin flex-center-row {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+}
+
+// @include casual-font;
+@mixin casual-font {
+	font-family: "Indie Flower", cursive;
+}
+
+// @include text-select-none;
+@mixin text-select-none {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+

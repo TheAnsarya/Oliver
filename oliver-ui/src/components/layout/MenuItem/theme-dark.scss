@@ -1,0 +1,9 @@
+@import "../../../sass/~includes.scss";
+
+.theme-dark {
+	.menu-item {
+		&:hover {
+			background-color: #ffffff14;
+		}
+	}
+}

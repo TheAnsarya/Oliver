@@ -1,0 +1,11 @@
+@import "../../../sass/~includes.scss";
+
+.theme-dark {
+	.topbar-icon-button {
+		color: $dark-link-color;
+
+		.icon {
+			color: $dark-link-color;
+		}
+	}
+}

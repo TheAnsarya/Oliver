@@ -1,0 +1,35 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.topbar-container {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+	flex-grow: 1;
+	font-size: 13px;
+	height: 60px;
+	justify-content: space-between;
+	position: relative;
+	width: 100%;
+	z-index: 500;
+
+	.topbar-side {
+		align-items: center;
+		display: flex;
+		height: 100%;
+
+		&.topbar-left {
+			padding-left: 10px;
+		}
+
+		&.topbar-right {
+			padding-right: 32px;
+
+			// TODO: is this selector right?
+			.icon {
+				padding: 0 15px;
+			}
+		}
+	}
+}
