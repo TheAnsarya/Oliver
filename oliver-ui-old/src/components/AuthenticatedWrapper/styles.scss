@@ -1,0 +1,10 @@
+#authenticated-wrapper {
+	display: flex;
+	flex-direction: row;
+
+	#authenticated-content {
+		height: 100vh;
+		flex-grow: 1;
+		overflow-y: auto;
+	}
+}

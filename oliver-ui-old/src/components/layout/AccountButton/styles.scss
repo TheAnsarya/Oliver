@@ -1,0 +1,44 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.account-button {
+	align-items: center;
+	display: inline-flex;
+	flex-shrink: 0;
+	height: 100%;
+	margin-left: 25px;
+	max-width: 100%;
+	min-width: 30px;
+	overflow: visible !important;
+	padding-right: 13px;
+	position: relative;
+	text-overflow: ellipsis;
+	white-space: nowrap !important;
+
+	.account-button-avatar-container {
+		display: flex;
+	}
+
+	.account-button-arrow {
+		border-bottom-width: 0;
+		border-left: 4px solid transparent;
+		border-right: 4px solid transparent;
+		border-style: solid;
+		border-top-width: 5px;
+		display: inline-block;
+		height: 0;
+		margin: 0;
+		position: absolute;
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		transition: border 0.2s, transform 0.4s;
+		vertical-align: middle;
+		width: 0;
+
+		&.account-button-arrow-up {
+			transform: translateY(-50%) rotateX(180deg);
+		}
+	}
+}

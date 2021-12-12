@@ -1,0 +1,11 @@
+@import "../../../sass/~includes.scss";
+
+.theme-dark {
+	.link {
+		color: $dark-link-color;
+
+		&:hover {
+			color: $dark-link-highlight-color;
+		}
+	}
+}

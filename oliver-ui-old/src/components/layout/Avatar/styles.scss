@@ -1,0 +1,19 @@
+@import "../../../sass/~includes.scss";
+
+@import "./theme-dark.scss";
+
+.avatar {
+	align-content: center;
+	align-items: center;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: cover;
+	border-radius: 50%;
+	display: inline-flex;
+	font-size: 1.2em;
+	height: 44px;
+	justify-content: center;
+	overflow: hidden;
+	position: relative;
+	width: 44px;
+}
