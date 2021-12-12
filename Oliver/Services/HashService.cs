@@ -10,7 +10,7 @@ using Oliver.Services.Interfaces;
 namespace Oliver.Services {
 	public class HashService : IHashService {
 		// Read stream in 32k chunks
-		private const int CHUNK_LENGTH = 32 * 1024;
+		private const int ChunkLength = 32 * 1024;
 
 		// MD5
 		public async Task<byte[]> GetMD5(byte[] data) {
@@ -100,10 +100,10 @@ namespace Oliver.Services {
 			using var sha1Hasher = SHA1.Create();
 			using var sha256Hasher = SHA256.Create();
 
-			var buffer = ArrayPool<byte>.Shared.Rent(CHUNK_LENGTH);
+			var buffer = ArrayPool<byte>.Shared.Rent(ChunkLength);
 			int read;
 
-			while ((read = await stream.ReadAsync(buffer.AsMemory(0, CHUNK_LENGTH))) > 0) {
+			while ((read = await stream.ReadAsync(buffer.AsMemory(0, ChunkLength))) > 0) {
 				// TODO: check to make sure reutrn values match what we expect 
 				md5Hasher.TransformBlock(buffer, 0, read, buffer, 0);
 				sha1Hasher.TransformBlock(buffer, 0, read, buffer, 0);

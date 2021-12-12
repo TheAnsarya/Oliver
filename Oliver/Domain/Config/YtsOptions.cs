@@ -4,6 +4,6 @@
 
 		public string BaseAddress { get; set; }
 
-		public YtsTypes Types { get; set; }
+		//public YtsTypes Types { get; set; }
 	}
 }

@@ -5,12 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
-using Oliver.BackgroundServices;
 using Oliver.Data;
 using Oliver.Domain.Config;
 using Oliver.Exceptions;
-using Oliver.Services;
-using Oliver.Services.Interfaces;
 
 namespace Oliver {
 	public class Startup {
@@ -21,8 +18,8 @@ namespace Oliver {
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services) {
 			// Config options from appsettings.json
-			//_ = services
-			//	.Configure<YtsOptions>(Configuration.GetSection(YtsOptions.SectionName))
+			_ = services
+				.Configure<YtsOptions>(Configuration.GetSection(YtsOptions.SectionName));
 			//	.Configure<FoldersOptions>(Configuration.GetSection(FoldersOptions.SectionName));
 
 			_ = services.AddHttpClient();

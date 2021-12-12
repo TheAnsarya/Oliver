@@ -8,8 +8,6 @@ namespace Oliver.Controllers {
 	public class MoviesController : ControllerBase {
 		private ILogger<MoviesController> Logger { get; }
 
-		public MoviesController(ILogger<MoviesController> logger) {
-			Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-		}
+		public MoviesController(ILogger<MoviesController> logger) => Logger = logger ?? throw new ArgumentNullException(nameof(logger));
 	}
 }
