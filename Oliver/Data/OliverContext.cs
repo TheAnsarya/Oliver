@@ -1,63 +1,55 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oliver.Domain;
 
-namespace Oliver.Data {
-	public class OliverContext : DbContext {
-		//protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite("Data Source=oliver.db");
+namespace Oliver.Data;
 
-		public OliverContext(DbContextOptions<OliverContext> options) : base(options) { }
+public class OliverContext : DbContext {
+	public OliverContext(DbContextOptions<OliverContext> options) : base(options) { }
 
-		public override int SaveChanges() {
-			SaveChangesHelper();
-			return base.SaveChanges();
-		}
+	public DbSet<Movie> Movies => Set<Movie>();
 
-		public override int SaveChanges(bool acceptAllChangesOnSuccess) {
-			SaveChangesHelper();
-			return base.SaveChanges(acceptAllChangesOnSuccess);
-		}
+	public DbSet<Genre> Genres => Set<Genre>();
 
-		public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
-			SaveChangesHelper();
-			return base.SaveChangesAsync(cancellationToken);
-		}
+	public DbSet<TorrentInfo> TorrentInfos => Set<TorrentInfo>();
 
-		public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default) {
-			SaveChangesHelper();
-			return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-		}
+	public DbSet<SyncState> SyncStates => Set<SyncState>();
 
-		private void SaveChangesHelper() {
-			var entries =
-				ChangeTracker
-					.Entries()
-					.Where(x => x.Entity is Entity && (x.State == EntityState.Added || x.State == EntityState.Modified));
+	protected override void OnModelCreating(ModelBuilder modelBuilder) {
+		ArgumentNullException.ThrowIfNull(modelBuilder);
+		modelBuilder.Entity<Movie>(e => {
+			e.HasIndex(m => m.YtsId).IsUnique();
+			e.HasMany(m => m.Torrents).WithOne(t => t.Movie).HasForeignKey(t => t.MovieId);
+			e.HasMany(m => m.Genres).WithOne(g => g.Movie).HasForeignKey(g => g.MovieId);
+		});
 
-			foreach (var entry in entries) {
-				var entity = (Entity)entry.Entity;
+		modelBuilder.Entity<TorrentInfo>(e => {
+			e.HasIndex(t => t.Hash);
+		});
 
-				if (entry.State == EntityState.Added) {
-					entity.CreatedDate = DateTime.Now;
-				}
+		modelBuilder.Entity<SyncState>(e => {
+			e.HasIndex(s => s.Key).IsUnique();
+		});
+	}
 
-				entity.UpdatedDate = DateTime.Now;
+	public override int SaveChanges() {
+		SetTimestamps();
+		return base.SaveChanges();
+	}
+
+	public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
+		SetTimestamps();
+		return base.SaveChangesAsync(cancellationToken);
+	}
+
+	private void SetTimestamps() {
+		var entries = ChangeTracker.Entries<Entity>()
+			.Where(e => e.State is EntityState.Added or EntityState.Modified);
+
+		foreach (var entry in entries) {
+			if (entry.State == EntityState.Added) {
+				entry.Entity.CreatedDate = DateTime.UtcNow;
 			}
+			entry.Entity.UpdatedDate = DateTime.UtcNow;
 		}
-
-		public DbSet<Movie> Movies { get; set; }
-
-		public DbSet<TorrentInfo> TorrentInfos { get; set; }
-
-		public DbSet<GenreString> GenreStrings { get; set; }
-
-		public DbSet<TorrentFile> TorrentFiles { get; set; }
-
-		public DbSet<TorrentDataFile> TorrentDataFiles { get; set; }
-
-		public DbSet<DataFile> DataFiles { get; set; }
 	}
 }

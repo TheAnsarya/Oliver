@@ -1,95 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using Oliver.Domain.YTS.Responses;
+﻿namespace Oliver.Domain;
 
-namespace Oliver.Domain {
-	public class TorrentInfo : Entity, IEquatable<TorrentInfo> {
-		public string Url { get; set; }
+public class TorrentInfo : Entity {
+	public string? Url { get; set; }
 
-		public string Hash { get; set; }
+	public string Hash { get; set; } = string.Empty;
 
-		public string Quality { get; set; }
+	public string? Quality { get; set; }
 
-		public string Type { get; set; }
+	public string? Type { get; set; }
 
-		public string Size { get; set; }
+	public string? Size { get; set; }
 
-		public long SizeBytes { get; set; }
+	public long SizeBytes { get; set; }
 
-		public string DateUploaded { get; set; }
+	public int Seeds { get; set; }
 
-		public long DateUploadedUnix { get; set; }
+	public int Peers { get; set; }
 
-		public bool Current { get; set; }
+	public string? DateUploaded { get; set; }
 
-		public Guid TorrentFileId { get; set; }
+	public long DateUploadedUnix { get; set; }
 
-		// Link Properties
+	// Download tracking
+	public bool TorrentFileDownloaded { get; set; }
 
-		public virtual Movie Movie { get; set; }
+	public string? TorrentFilePath { get; set; }
 
-		public virtual TorrentFile TorrentFile { get; set; }
+	// Navigation
+	public Guid MovieId { get; set; }
 
-		// Constructors
-
-		public TorrentInfo() : base() { }
-
-		public TorrentInfo(YtsTorrentInfo dto, Movie movie) {
-			if (dto is null) {
-				throw new ArgumentNullException(nameof(dto));
-			}
-
-			Url = dto.Url;
-			Hash = dto.Hash;
-			Quality = dto.Quality;
-			Type = dto.Type;
-			Size = dto.Size;
-			SizeBytes = dto.SizeBytes;
-			DateUploaded = dto.DateUploaded;
-			DateUploadedUnix = dto.DateUploadedUnix;
-
-			Movie = movie;
-			Current = true;
-		}
-
-		// Equality
-
-		public override bool Equals(object obj) => Equals(obj as TorrentInfo);
-
-		public bool Equals(TorrentInfo other) => other != null &&
-				   Url == other.Url &&
-				   Hash == other.Hash &&
-				   Quality == other.Quality &&
-				   Type == other.Type &&
-				   Size == other.Size &&
-				   SizeBytes == other.SizeBytes &&
-				   DateUploaded == other.DateUploaded &&
-				   DateUploadedUnix == other.DateUploadedUnix;
-
-		public override int GetHashCode() => HashCode.Combine(Url, Hash, Quality, Type, Size, SizeBytes, DateUploaded, DateUploadedUnix);
-
-		public static bool operator ==(TorrentInfo left, TorrentInfo right) => EqualityComparer<TorrentInfo>.Default.Equals(left, right);
-
-		public static bool operator !=(TorrentInfo left, TorrentInfo right) => !(left == right);
-
-		// Update
-
-		public void Update(TorrentInfo other) {
-			if (other == null) {
-				throw new ArgumentNullException(nameof(other));
-			} else if (Hash != other.Hash) {
-				throw new ArgumentException($"Cannot merge {nameof(TorrentInfo)} :: {nameof(Hash)} must match", nameof(other));
-			}
-
-			Url = other.Url;
-			Hash = other.Hash;
-			Quality = other.Quality;
-			Type = other.Type;
-			Size = other.Size;
-			SizeBytes = other.SizeBytes;
-			DateUploaded = other.DateUploaded;
-			DateUploadedUnix = other.DateUploadedUnix;
-			Current = other.Current;
-		}
-	}
+	public Movie? Movie { get; set; }
 }
