@@ -1,48 +1,26 @@
 # Oliver UI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Modern web dashboard for the Oliver YTS movie dataset manager.
 
-## Folders
+## Tech Stack
 
-The app is organized as follows:
+- **React 19** with TypeScript 5.9
+- **Vite 7** for build/dev tooling
+- **TanStack React Query** for server state management
 
-### `public/config.js`
+## Development
 
-Set the address to the backend api through the `window.Config.apiAddress` property.
+```bash
+npm install
+npm run dev
+```
 
-### `src/auth/`
+Opens at [http://localhost:3000](http://localhost:3000). API requests proxy to `http://localhost:5000/api`.
 
-Authentication management for the app.
+## Build
 
-### `src/components/`
+```bash
+npm run build
+```
 
-Components
-
-### `src/exceptions/`
-
-Custom javascript exception classes
-
-### `src/images/`
-
-Images
-
-### `src/redux/`
-
-Holds the redux store.
-
-### `src/sass/`
-
-Styles
-
-### `src/typedefs/`
-
-Generic typescript interface definitions
-
-### `src/utils/`
-
-Utility/helper javascript files like `network`
-
-## Todo
-
-* Show movies/torrents
-* Show current services actions with websockets
+Output goes to `dist/`.

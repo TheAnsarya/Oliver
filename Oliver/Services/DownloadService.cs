@@ -2,22 +2,15 @@
 
 namespace Oliver.Services;
 
-public class DownloadService {
-	private readonly HttpClient _httpClient;
-	private readonly ILogger<DownloadService> _logger;
-	private readonly string _basePath;
-	private readonly string _torrentsFolder;
-	private readonly string _imagesFolder;
+public class DownloadService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<DownloadService> logger) {
+	private readonly HttpClient _httpClient = httpClientFactory.CreateClient("yts");
+	private readonly ILogger<DownloadService> _logger = logger;
+	private readonly string _basePath = Path.GetFullPath(configuration["Downloads:BasePath"] ?? "YtsData");
+	private readonly string _torrentsFolder = configuration["Downloads:TorrentsFolder"] ?? "torrents";
+	private readonly string _imagesFolder = configuration["Downloads:ImagesFolder"] ?? "images";
+	private readonly int _maxRetries = configuration.GetValue("Downloads:MaxRetries", 3);
 
-	public DownloadService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<DownloadService> logger) {
-		ArgumentNullException.ThrowIfNull(httpClientFactory);
-		ArgumentNullException.ThrowIfNull(configuration);
-		_httpClient = httpClientFactory.CreateClient("yts");
-		_logger = logger;
-		_basePath = Path.GetFullPath(configuration["Downloads:BasePath"] ?? "YtsData");
-		_torrentsFolder = configuration["Downloads:TorrentsFolder"] ?? "torrents";
-		_imagesFolder = configuration["Downloads:ImagesFolder"] ?? "images";
-
+	public void EnsureDirectories() {
 		Directory.CreateDirectory(Path.Combine(_basePath, _torrentsFolder));
 		Directory.CreateDirectory(Path.Combine(_basePath, _imagesFolder));
 	}
@@ -30,15 +23,27 @@ public class DownloadService {
 			return filePath;
 		}
 
-		try {
-			var data = await _httpClient.GetByteArrayAsync(url, ct);
-			await File.WriteAllBytesAsync(filePath, data, ct);
-			_logger.LogDebug("Downloaded torrent {Hash}", hash);
-			return filePath;
-		} catch (Exception ex) {
-			_logger.LogWarning(ex, "Failed to download torrent {Hash} from {Url}", hash, url);
-			return null;
+		for (var attempt = 1; attempt <= _maxRetries; attempt++) {
+			try {
+				var data = await _httpClient.GetByteArrayAsync(url, ct);
+				await File.WriteAllBytesAsync(filePath, data, ct);
+				_logger.LogDebug("Downloaded torrent {Hash}", hash);
+				return filePath;
+			} catch (OperationCanceledException) {
+				throw;
+			} catch (Exception ex) when (attempt < _maxRetries) {
+				var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+				_logger.LogWarning(ex, "Failed to download torrent {Hash} (attempt {Attempt}/{Max}), retrying in {Delay}s",
+					hash, attempt, _maxRetries, delay.TotalSeconds);
+				await Task.Delay(delay, ct);
+			} catch (Exception ex) {
+				_logger.LogWarning(ex, "Failed to download torrent {Hash} from {Url} after {Max} attempts",
+					hash, url, _maxRetries);
+				return null;
+			}
 		}
+
+		return null;
 	}
 
 	public async Task DownloadMovieImagesAsync(int ytsId, Dictionary<string, string?> imageUrls, CancellationToken ct = default) {
@@ -58,11 +63,22 @@ public class DownloadService {
 				continue;
 			}
 
-			try {
-				var data = await _httpClient.GetByteArrayAsync(url, ct);
-				await File.WriteAllBytesAsync(filePath, data, ct);
-			} catch (Exception ex) {
-				_logger.LogWarning(ex, "Failed to download image {Name} for movie {YtsId}", name, ytsId);
+			for (var attempt = 1; attempt <= _maxRetries; attempt++) {
+				try {
+					var data = await _httpClient.GetByteArrayAsync(url, ct);
+					await File.WriteAllBytesAsync(filePath, data, ct);
+					break;
+				} catch (OperationCanceledException) {
+					throw;
+				} catch (Exception ex) when (attempt < _maxRetries) {
+					var delay = TimeSpan.FromSeconds(Math.Pow(2, attempt));
+					_logger.LogWarning(ex, "Failed to download image {Name} for movie {YtsId} (attempt {Attempt}/{Max}), retrying",
+						name, ytsId, attempt, _maxRetries);
+					await Task.Delay(delay, ct);
+				} catch (Exception ex) {
+					_logger.LogWarning(ex, "Failed to download image {Name} for movie {YtsId} after {Max} attempts",
+						name, ytsId, _maxRetries);
+				}
 			}
 		}
 	}

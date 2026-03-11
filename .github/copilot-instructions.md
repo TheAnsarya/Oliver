@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Oliver** is a .NET 9 application that downloads, organizes, and manages the complete YTS movie dataset. It fetches all movie metadata from the YTS API, downloads torrent files and cover images, and stores everything in a SQLite database with a well-organized folder structure.
+**Oliver** is a .NET 10 application that downloads, organizes, and manages the complete YTS movie dataset. It fetches all movie metadata from the YTS API, downloads torrent files and cover images, and stores everything in a SQLite database with a well-organized folder structure.
 
 Key features and focus areas:
 
@@ -165,7 +165,7 @@ if (condition)
 
 ### C# Standard
 
-- **.NET 9** with latest C# features (C# 13)
+- **.NET 10** with latest C# features (C# 14)
 - File-scoped namespaces where applicable
 - Nullable reference types enabled
 - Implicit usings enabled

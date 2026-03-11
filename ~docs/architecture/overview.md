@@ -2,7 +2,7 @@
 
 ## System Design
 
-Oliver is a **.NET 9 Worker Service** that runs as a background process to build a complete local copy of the YTS movie dataset. It is not a web application — it is a data pipeline that fetches, stores, and organizes movie data.
+Oliver is a **.NET 10 Worker Service** that runs as a background process to build a complete local copy of the YTS movie dataset. It is not a web application — it is a data pipeline that fetches, stores, and organizes movie data.
 
 ## Core Pipeline
 
@@ -61,7 +61,7 @@ Skips already-downloaded files.
 
 ### Data/OliverContext.cs
 
-EF Core 9 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestamps. Defines indexes on `Movie.YtsId` (unique), `TorrentInfo.Hash`, and `SyncState.Key` (unique).
+EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestamps. Defines indexes on `Movie.YtsId` (unique), `TorrentInfo.Hash`, and `SyncState.Key` (unique).
 
 ### Domain Models
 
@@ -91,8 +91,8 @@ All tunable via `appsettings.json`:
 
 ## Technology Stack
 
-- .NET 9 (Worker Service SDK)
-- EF Core 9 + SQLite
+- .NET 10 (Worker Service SDK)
+- EF Core 10 + SQLite
 - Serilog (Console + File sinks)
 - System.Text.Json
 - BencodeNET 5 (for future torrent file parsing)

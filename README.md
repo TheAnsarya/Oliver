@@ -1,6 +1,6 @@
 # Oliver
 
-**Oliver** is a .NET 9 application that downloads, organizes, and manages the complete YTS movie dataset. It fetches all movie metadata from the YTS API, downloads torrent files and cover images, and stores everything in a SQLite database with a well-organized folder structure.
+**Oliver** is a .NET 10 application that downloads, organizes, and manages the complete YTS movie dataset. It fetches all movie metadata from the YTS API, downloads torrent files and cover images, and stores everything in a SQLite database with a well-organized folder structure.
 
 ## Features
 
@@ -18,7 +18,7 @@ Oliver/
 ├── BackgroundServices/
 │   └── YtsSyncWorker.cs        # Main orchestrator (paginate → save → download)
 ├── Data/
-│   └── OliverContext.cs         # EF Core 9 + SQLite context
+│   └── OliverContext.cs         # EF Core 10 + SQLite context
 ├── Domain/
 │   ├── Entity.cs                # Base entity (Id, timestamps)
 │   ├── Movie.cs                 # Movie metadata
@@ -32,7 +32,7 @@ Oliver/
 │   └── DownloadService.cs       # Torrent + image file downloader
 ├── Program.cs                   # Entry point, DI setup
 ├── appsettings.json             # Configuration
-└── Oliver.csproj                # .NET 9 Worker Service
+└── Oliver.csproj                # .NET 10 Worker Service
 ```
 
 ## Download Folder Structure
@@ -59,7 +59,7 @@ YtsData/
 
 ### Prerequisites
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 ### Build
 
@@ -115,8 +115,8 @@ Edit [Oliver/appsettings.json](Oliver/appsettings.json):
 
 ## Tech Stack
 
-- **.NET 9** Worker Service
-- **EF Core 9** with SQLite
+- **.NET 10** Worker Service
+- **EF Core 10** with SQLite
 - **Serilog** for structured logging
 - **System.Text.Json** for API deserialization
 - **BencodeNET 5** for future torrent parsing
@@ -131,4 +131,5 @@ Edit [Oliver/appsettings.json](Oliver/appsettings.json):
 - [Architecture Overview](~docs/architecture/overview.md)
 - [Download Pipeline Plan](~docs/plans/download-pipeline-plan.md)
 - [Session Logs](~docs/session-logs/)
+- [UI README](oliver-ui/README.md)
 - [Copilot Instructions](.github/copilot-instructions.md)

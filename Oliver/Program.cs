@@ -28,10 +28,13 @@ try {
 	builder.Services.AddDbContext<OliverContext>(options =>
 		options.UseSqlite($"Data Source={fullDbPath}"));
 
-	// HTTP client
+	// HTTP client with connection pooling
 	builder.Services.AddHttpClient("yts", client => {
-		client.DefaultRequestHeaders.UserAgent.ParseAdd("Oliver/1.0");
+		client.DefaultRequestHeaders.UserAgent.ParseAdd("Oliver/2.0");
 		client.Timeout = TimeSpan.FromSeconds(30);
+	}).ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler {
+		PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+		MaxConnectionsPerServer = 10,
 	});
 
 	// Services

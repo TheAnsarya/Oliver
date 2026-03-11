@@ -10,16 +10,20 @@ Build a complete local copy of the YTS movie dataset:
 
 ## Phases
 
-### Phase 1: Core Pipeline (Current)
+### Phase 1: Core Pipeline (Complete)
 
-- [x] .NET 9 Worker Service project setup
+- [x] .NET 10 Worker Service project setup (upgraded from .NET 9)
 - [x] Domain models (Movie, Genre, TorrentInfo, SyncState)
-- [x] EF Core 9 + SQLite database context
-- [x] YTS API client with pagination
-- [x] Download service for torrents and images
+- [x] EF Core 10 + SQLite database context
+- [x] YTS API client with pagination and retry logic
+- [x] Download service for torrents and images with retry logic
 - [x] Background worker orchestrating the full pipeline
 - [x] Resume support via SyncState tracking
 - [x] Structured folder layout for downloads
+- [x] Parallel downloads with SemaphoreSlim (configurable concurrency)
+- [x] Exponential backoff retry on all HTTP operations
+- [x] HTTP connection pooling via SocketsHttpHandler
+- [x] Batch processing with chunked DB saves
 
 ### Phase 2: Data Verification
 

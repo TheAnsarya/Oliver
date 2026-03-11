@@ -7,63 +7,58 @@ using Oliver.Services;
 
 namespace Oliver.BackgroundServices;
 
-public class YtsSyncWorker : BackgroundService {
-	private readonly IServiceScopeFactory _scopeFactory;
-	private readonly ILogger<YtsSyncWorker> _logger;
-	private readonly IConfiguration _config;
-
-	public YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWorker> logger, IConfiguration config) {
-		_scopeFactory = scopeFactory;
-		_logger = logger;
-		_config = config;
-	}
-
+public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWorker> logger, IConfiguration config) : BackgroundService {
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
-		_logger.LogInformation("YTS sync worker starting");
+		logger.LogInformation("YTS sync worker starting");
 
 		// Wait a moment for the app to fully start
 		await Task.Delay(2000, stoppingToken);
 
 		try {
+			// Ensure download directories exist
+			using (var scope = scopeFactory.CreateScope()) {
+				scope.ServiceProvider.GetRequiredService<DownloadService>().EnsureDirectories();
+			}
+
 			await SyncAllMoviesAsync(stoppingToken);
 			await DownloadAllTorrentsAsync(stoppingToken);
 			await DownloadAllImagesAsync(stoppingToken);
 
-			_logger.LogInformation("YTS sync complete! All data downloaded.");
+			logger.LogInformation("YTS sync complete! All data downloaded.");
 		} catch (OperationCanceledException) {
-			_logger.LogInformation("YTS sync worker cancelled");
+			logger.LogInformation("YTS sync worker cancelled");
 		} catch (Exception ex) {
-			_logger.LogError(ex, "YTS sync worker encountered a fatal error");
+			logger.LogError(ex, "YTS sync worker encountered a fatal error");
 		}
 	}
 
 	private async Task SyncAllMoviesAsync(CancellationToken ct) {
-		using var scope = _scopeFactory.CreateScope();
+		using var scope = scopeFactory.CreateScope();
 		var api = scope.ServiceProvider.GetRequiredService<YtsApiClient>();
 		var db = scope.ServiceProvider.GetRequiredService<OliverContext>();
 
-		var pageSize = _config.GetValue("Yts:PageSize", 50);
-		var delayMs = _config.GetValue("Yts:RequestDelayMs", 1000);
+		var pageSize = config.GetValue("Yts:PageSize", 50);
+		var delayMs = config.GetValue("Yts:RequestDelayMs", 1000);
 
 		// Get the last synced page from state
 		var startPage = await GetSyncStateAsync(db, "LastCompletedPage", 0);
 		startPage++; // Start from the next page
 
-		_logger.LogInformation("Starting movie sync from page {Page}", startPage);
+		logger.LogInformation("Starting movie sync from page {Page}", startPage);
 
 		// First request to get total count
 		var (firstMovies, totalCount) = await api.GetMoviesPageAsync(startPage, pageSize, ct);
 		if (totalCount == 0) {
-			_logger.LogWarning("API returned 0 movies. Check if the API is available.");
+			logger.LogWarning("API returned 0 movies. Check if the API is available.");
 			return;
 		}
 
 		var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-		_logger.LogInformation("Total movies: {Count}, Total pages: {Pages}, Starting at: {Start}", totalCount, totalPages, startPage);
+		logger.LogInformation("Total movies: {Count}, Total pages: {Pages}, Starting at: {Start}", totalCount, totalPages, startPage);
 
 		// Process the first page
 		var newMovies = await UpsertMoviesAsync(db, firstMovies);
-		_logger.LogInformation("Page {Page}/{Total}: {New} new/updated movies", startPage, totalPages, newMovies);
+		logger.LogInformation("Page {Page}/{Total}: {New} new/updated movies", startPage, totalPages, newMovies);
 		await SetSyncStateAsync(db, "LastCompletedPage", startPage);
 
 		// Process remaining pages
@@ -73,12 +68,12 @@ public class YtsSyncWorker : BackgroundService {
 
 			var (movies, _) = await api.GetMoviesPageAsync(page, pageSize, ct);
 			if (movies.Count == 0) {
-				_logger.LogWarning("Empty page {Page}, stopping sync", page);
+				logger.LogWarning("Empty page {Page}, stopping sync", page);
 				break;
 			}
 
 			newMovies = await UpsertMoviesAsync(db, movies);
-			_logger.LogInformation("Page {Page}/{Total}: {New} new/updated movies (total in DB: {DbCount})",
+			logger.LogInformation("Page {Page}/{Total}: {New} new/updated movies (total in DB: {DbCount})",
 				page, totalPages, newMovies, await db.Movies.CountAsync(ct));
 
 			await SetSyncStateAsync(db, "LastCompletedPage", page);
@@ -86,90 +81,111 @@ public class YtsSyncWorker : BackgroundService {
 
 		var movieCount = await db.Movies.CountAsync(ct);
 		var torrentCount = await db.TorrentInfos.CountAsync(ct);
-		_logger.LogInformation("Movie sync complete: {Movies} movies, {Torrents} torrents in database", movieCount, torrentCount);
+		logger.LogInformation("Movie sync complete: {Movies} movies, {Torrents} torrents in database", movieCount, torrentCount);
 	}
 
 	private async Task DownloadAllTorrentsAsync(CancellationToken ct) {
-		using var scope = _scopeFactory.CreateScope();
-		var downloader = scope.ServiceProvider.GetRequiredService<DownloadService>();
+		using var scope = scopeFactory.CreateScope();
 		var db = scope.ServiceProvider.GetRequiredService<OliverContext>();
-
-		var delayMs = _config.GetValue("Yts:RequestDelayMs", 1000);
+		var maxConcurrency = config.GetValue("Downloads:MaxConcurrency", 5);
 
 		var torrentsToDownload = await db.TorrentInfos
 			.Where(t => !t.TorrentFileDownloaded && t.Url != null)
 			.ToListAsync(ct);
 
-		_logger.LogInformation("Downloading {Count} torrent files", torrentsToDownload.Count);
+		if (torrentsToDownload.Count == 0) {
+			logger.LogInformation("No torrent files to download");
+			return;
+		}
+
+		logger.LogInformation("Downloading {Count} torrent files ({Concurrency} concurrent)", torrentsToDownload.Count, maxConcurrency);
 
 		var downloaded = 0;
 		var failed = 0;
+		using var semaphore = new SemaphoreSlim(maxConcurrency);
 
-		foreach (var torrent in torrentsToDownload) {
-			ct.ThrowIfCancellationRequested();
+		// Process in batches to manage DB saves
+		var batchSize = 100;
+		foreach (var batch in torrentsToDownload.Chunk(batchSize)) {
+			var tasks = batch.Select(async torrent => {
+				await semaphore.WaitAsync(ct);
+				try {
+					using var dlScope = scopeFactory.CreateScope();
+					var downloader = dlScope.ServiceProvider.GetRequiredService<DownloadService>();
 
-			var path = await downloader.DownloadTorrentAsync(torrent.Hash, new Uri(torrent.Url!), ct);
-			if (path is not null) {
-				torrent.TorrentFileDownloaded = true;
-				torrent.TorrentFilePath = path;
-				downloaded++;
-			} else {
-				failed++;
-			}
+					var path = await downloader.DownloadTorrentAsync(torrent.Hash, new Uri(torrent.Url!), ct);
+					if (path is not null) {
+						torrent.TorrentFileDownloaded = true;
+						torrent.TorrentFilePath = path;
+						Interlocked.Increment(ref downloaded);
+					} else {
+						Interlocked.Increment(ref failed);
+					}
+				} finally {
+					semaphore.Release();
+				}
+			});
 
-			if (downloaded % 100 == 0) {
-				await db.SaveChangesAsync(ct);
-				_logger.LogInformation("Torrents: {Downloaded} downloaded, {Failed} failed, {Remaining} remaining",
-					downloaded, failed, torrentsToDownload.Count - downloaded - failed);
-			}
+			await Task.WhenAll(tasks);
+			await db.SaveChangesAsync(ct);
 
-			await Task.Delay(delayMs / 2, ct);
+			logger.LogInformation("Torrents: {Downloaded} downloaded, {Failed} failed, {Remaining} remaining",
+				downloaded, failed, torrentsToDownload.Count - downloaded - failed);
 		}
 
-		await db.SaveChangesAsync(ct);
-		_logger.LogInformation("Torrent download complete: {Downloaded} downloaded, {Failed} failed", downloaded, failed);
+		logger.LogInformation("Torrent download complete: {Downloaded} downloaded, {Failed} failed", downloaded, failed);
 	}
 
 	private async Task DownloadAllImagesAsync(CancellationToken ct) {
-		using var scope = _scopeFactory.CreateScope();
-		var downloader = scope.ServiceProvider.GetRequiredService<DownloadService>();
+		using var scope = scopeFactory.CreateScope();
 		var db = scope.ServiceProvider.GetRequiredService<OliverContext>();
-
-		var delayMs = _config.GetValue("Yts:RequestDelayMs", 1000);
+		var maxConcurrency = config.GetValue("Downloads:MaxConcurrency", 5);
 
 		var moviesToDownload = await db.Movies
 			.Where(m => !m.ImagesDownloaded)
 			.ToListAsync(ct);
 
-		_logger.LogInformation("Downloading images for {Count} movies", moviesToDownload.Count);
-
-		var completed = 0;
-
-		foreach (var movie in moviesToDownload) {
-			ct.ThrowIfCancellationRequested();
-
-			var imageUrls = new Dictionary<string, string?> {
-				["small_cover"] = movie.SmallCoverImage,
-				["medium_cover"] = movie.MediumCoverImage,
-				["large_cover"] = movie.LargeCoverImage,
-				["background"] = movie.BackgroundImage,
-				["background_original"] = movie.BackgroundImageOriginal,
-			};
-
-			await downloader.DownloadMovieImagesAsync(movie.YtsId, imageUrls, ct);
-			movie.ImagesDownloaded = true;
-			completed++;
-
-			if (completed % 100 == 0) {
-				await db.SaveChangesAsync(ct);
-				_logger.LogInformation("Images: {Completed}/{Total} movies processed", completed, moviesToDownload.Count);
-			}
-
-			await Task.Delay(delayMs / 2, ct);
+		if (moviesToDownload.Count == 0) {
+			logger.LogInformation("No movie images to download");
+			return;
 		}
 
-		await db.SaveChangesAsync(ct);
-		_logger.LogInformation("Image download complete: {Count} movies processed", completed);
+		logger.LogInformation("Downloading images for {Count} movies ({Concurrency} concurrent)", moviesToDownload.Count, maxConcurrency);
+
+		var completed = 0;
+		using var semaphore = new SemaphoreSlim(maxConcurrency);
+
+		var batchSize = 100;
+		foreach (var batch in moviesToDownload.Chunk(batchSize)) {
+			var tasks = batch.Select(async movie => {
+				await semaphore.WaitAsync(ct);
+				try {
+					using var dlScope = scopeFactory.CreateScope();
+					var downloader = dlScope.ServiceProvider.GetRequiredService<DownloadService>();
+
+					var imageUrls = new Dictionary<string, string?> {
+						["small_cover"] = movie.SmallCoverImage,
+						["medium_cover"] = movie.MediumCoverImage,
+						["large_cover"] = movie.LargeCoverImage,
+						["background"] = movie.BackgroundImage,
+						["background_original"] = movie.BackgroundImageOriginal,
+					};
+
+					await downloader.DownloadMovieImagesAsync(movie.YtsId, imageUrls, ct);
+					movie.ImagesDownloaded = true;
+					Interlocked.Increment(ref completed);
+				} finally {
+					semaphore.Release();
+				}
+			});
+
+			await Task.WhenAll(tasks);
+			await db.SaveChangesAsync(ct);
+
+			logger.LogInformation("Images: {Completed}/{Total} movies processed", completed, moviesToDownload.Count);
+		}
+
+		logger.LogInformation("Image download complete: {Count} movies processed", completed);
 	}
 
 	private static async Task<int> UpsertMoviesAsync(OliverContext db, List<YtsMovie> dtos) {
