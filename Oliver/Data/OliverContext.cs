@@ -18,6 +18,8 @@ public class OliverContext : DbContext {
 
 	public DbSet<SyncState> SyncStates => Set<SyncState>();
 
+	public DbSet<LocalFile> LocalFiles => Set<LocalFile>();
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder) {
 		ArgumentNullException.ThrowIfNull(modelBuilder);
 		modelBuilder.Entity<Movie>(e => {
@@ -34,6 +36,12 @@ public class OliverContext : DbContext {
 
 		modelBuilder.Entity<SyncState>(e => {
 			e.HasIndex(s => s.Key).IsUnique();
+		});
+
+		modelBuilder.Entity<LocalFile>(e => {
+			e.HasIndex(f => f.FilePath).IsUnique();
+			e.HasOne(f => f.MatchedMovie).WithMany().HasForeignKey(f => f.MatchedMovieId);
+			e.HasOne(f => f.MatchedTorrent).WithMany().HasForeignKey(f => f.MatchedTorrentId);
 		});
 	}
 

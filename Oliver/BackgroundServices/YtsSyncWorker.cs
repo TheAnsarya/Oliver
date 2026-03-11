@@ -7,7 +7,7 @@ using Oliver.Services;
 
 namespace Oliver.BackgroundServices;
 
-public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWorker> logger, IConfiguration config, TorrentParsingService torrentParser) : BackgroundService {
+public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWorker> logger, IConfiguration config, TorrentParsingService torrentParser, FileScannerService fileScanner, FileMatchingService fileMatcher) : BackgroundService {
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
 		logger.LogInformation("YTS sync worker starting");
 
@@ -24,6 +24,7 @@ public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWor
 			await DownloadAllTorrentsAsync(stoppingToken);
 			await ParseAllTorrentsAsync(stoppingToken);
 			await DownloadAllImagesAsync(stoppingToken);
+			await ScanLocalFilesAsync(stoppingToken);
 
 			logger.LogInformation("YTS sync complete! All data downloaded and parsed.");
 		} catch (OperationCanceledException) {
@@ -250,6 +251,17 @@ public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWor
 		}
 
 		logger.LogInformation("Torrent parsing complete: {Parsed} parsed, {Failed} failed", parsed, failed);
+	}
+
+	private async Task ScanLocalFilesAsync(CancellationToken ct) {
+		logger.LogInformation("Scanning local files");
+		var result = await fileScanner.ScanAsync(ct);
+		logger.LogInformation("File scan complete: scanned {Dirs} directories, found {Total} files, added {New} new",
+			result.DirectoriesScanned, result.TotalFilesFound, result.NewFilesAdded);
+
+		var matchResult = await fileMatcher.MatchAllAsync(ct);
+		logger.LogInformation("File matching complete: {Matched}/{Total} matched",
+			matchResult.Matched, matchResult.TotalProcessed);
 	}
 
 	private static async Task<int> UpsertMoviesAsync(OliverContext db, List<YtsMovie> dtos) {

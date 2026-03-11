@@ -56,6 +56,7 @@ The main orchestrator. Runs four phases sequentially:
 2. **DownloadAllTorrents** — Downloads `.torrent` files for every torrent not yet downloaded
 3. **ParseAllTorrents** — Parses downloaded `.torrent` files using BencodeNET to extract metadata, file lists, and tracker URLs
 4. **DownloadAllImages** — Downloads cover and background images for every movie not yet downloaded
+5. **ScanLocalFiles** — Scans configured directories for video files and matches them to database entries
 
 Uses `SyncState` table to track the last completed page for resume support.
 
@@ -86,6 +87,14 @@ Data integrity and completeness verification. Five verification methods:
 - **DetectGapsAsync** — Finds movies missing torrents or images
 - **GetCompletenessReportAsync** — Full report with percentages, per-quality breakdown, DB size
 
+### Services/FileScannerService.cs
+
+Scans configured directories for video files (mkv, mp4, avi, etc.). Discovers new files, stores path/size/extension in `LocalFile` entity. Skips already-known files. Batch inserts per 100.
+
+### Services/FileMatchingService.cs
+
+Matches local files to YTS movies. Parses YTS-style filenames (`Title.Year.Quality.Codec.YTS.MX.ext`) using source-generated regex. Matches by title+year (case-insensitive SQLite LIKE), then links to specific torrent by quality.
+
 ### Data/OliverContext.cs
 
 EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestamps. Defines indexes on `Movie.YtsId` (unique), `TorrentInfo.Hash`, and `SyncState.Key` (unique). Configures one-to-many relationships for TorrentInfo → Files and TorrentInfo → Trackers.
@@ -99,6 +108,7 @@ EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestam
 | **TorrentInfo** | Hash, Url, Quality, Type, Size, TorrentFileDownloaded, TorrentFilePath, TorrentFileParsed, ComputedInfoHash, TorrentName, TotalFileSize, FileCount, PieceLength, Comment, TorrentCreationDate, MagnetLink |
 | **TorrentFileEntry** | FilePath, FileSize, TorrentInfoId (FK) |
 | **TorrentTracker** | Url, Tier, TorrentInfoId (FK) |
+| **LocalFile** | FilePath, FileName, Extension, FileSize, FileModified, MatchedMovieId (FK), MatchedTorrentId (FK) |
 | **SyncState** | Key, Value (for tracking sync progress) |
 | **Entity** | Base class: Id (Guid), CreatedDate, UpdatedDate |
 
@@ -120,6 +130,7 @@ All tunable via `appsettings.json`:
 - **Downloads:ImagesFolder** — Image subfolder name
 - **Downloads:MaxConcurrency** — Parallel download limit (default 5)
 - **Downloads:MaxRetries** — Retry count for failed downloads (default 3)
+- **FileScan:Paths** — Array of directories to scan for local video files
 
 ## API Endpoints
 
@@ -134,6 +145,9 @@ All tunable via `appsettings.json`:
 | `/api/verify/images` | GET | Validate all downloaded image files |
 | `/api/verify/gaps` | GET | Find movies missing torrents or images |
 | `/api/verify/completeness` | GET | Full completeness report with percentages |
+| `/api/local-files` | GET | Paginated list of discovered local files |
+| `/api/local-files/scan` | POST | Trigger local file scan |
+| `/api/local-files/match` | POST | Match local files to YTS movies |
 
 Query parameters for `/api/movies`: `page`, `limit`, `search`, `genre`, `quality`.
 

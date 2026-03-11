@@ -42,6 +42,8 @@ try {
 	builder.Services.AddScoped<DownloadService>();
 	builder.Services.AddSingleton<TorrentParsingService>();
 	builder.Services.AddSingleton<DataVerificationService>();
+	builder.Services.AddSingleton<FileScannerService>();
+	builder.Services.AddSingleton<FileMatchingService>();
 
 	// CORS for UI dev server
 	builder.Services.AddCors(options => {
@@ -190,6 +192,43 @@ try {
 
 	verify.MapGet("/completeness", async (DataVerificationService svc, CancellationToken ct) =>
 		Results.Ok(await svc.GetCompletenessReportAsync(ct)));
+
+	// Local files endpoints
+	api.MapGet("/local-files", async (OliverContext db, int page = 1, int limit = 20) => {
+		limit = Math.Clamp(limit, 1, 100);
+		page = Math.Max(1, page);
+
+		var totalCount = await db.LocalFiles.CountAsync();
+		var files = await db.LocalFiles
+			.OrderBy(f => f.FileName)
+			.Skip((page - 1) * limit)
+			.Take(limit)
+			.Select(f => new {
+				f.Id,
+				f.FilePath,
+				f.FileName,
+				f.Extension,
+				f.FileSize,
+				f.FileModified,
+				matchedMovieId = f.MatchedMovieId,
+				matchedTorrentId = f.MatchedTorrentId,
+			})
+			.ToListAsync();
+
+		return Results.Ok(new {
+			files,
+			totalCount,
+			page,
+			limit,
+			totalPages = (int)Math.Ceiling((double)totalCount / limit),
+		});
+	});
+
+	api.MapPost("/local-files/scan", async (FileScannerService scanner, CancellationToken ct) =>
+		Results.Ok(await scanner.ScanAsync(ct)));
+
+	api.MapPost("/local-files/match", async (FileMatchingService matcher, CancellationToken ct) =>
+		Results.Ok(await matcher.MatchAllAsync(ct)));
 
 	await app.RunAsync();
 } catch (Exception ex) {
