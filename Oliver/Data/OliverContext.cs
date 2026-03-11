@@ -12,6 +12,10 @@ public class OliverContext : DbContext {
 
 	public DbSet<TorrentInfo> TorrentInfos => Set<TorrentInfo>();
 
+	public DbSet<TorrentFileEntry> TorrentFileEntries => Set<TorrentFileEntry>();
+
+	public DbSet<TorrentTracker> TorrentTrackers => Set<TorrentTracker>();
+
 	public DbSet<SyncState> SyncStates => Set<SyncState>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder) {
@@ -24,6 +28,8 @@ public class OliverContext : DbContext {
 
 		modelBuilder.Entity<TorrentInfo>(e => {
 			e.HasIndex(t => t.Hash);
+			e.HasMany(t => t.Files).WithOne(f => f.TorrentInfo).HasForeignKey(f => f.TorrentInfoId);
+			e.HasMany(t => t.Trackers).WithOne(tr => tr.TorrentInfo).HasForeignKey(tr => tr.TorrentInfoId);
 		});
 
 		modelBuilder.Entity<SyncState>(e => {

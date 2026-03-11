@@ -7,7 +7,7 @@ using Oliver.Services;
 
 namespace Oliver.BackgroundServices;
 
-public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWorker> logger, IConfiguration config) : BackgroundService {
+public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWorker> logger, IConfiguration config, TorrentParsingService torrentParser) : BackgroundService {
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
 		logger.LogInformation("YTS sync worker starting");
 
@@ -22,9 +22,10 @@ public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWor
 
 			await SyncAllMoviesAsync(stoppingToken);
 			await DownloadAllTorrentsAsync(stoppingToken);
+			await ParseAllTorrentsAsync(stoppingToken);
 			await DownloadAllImagesAsync(stoppingToken);
 
-			logger.LogInformation("YTS sync complete! All data downloaded.");
+			logger.LogInformation("YTS sync complete! All data downloaded and parsed.");
 		} catch (OperationCanceledException) {
 			logger.LogInformation("YTS sync worker cancelled");
 		} catch (Exception ex) {
@@ -186,6 +187,69 @@ public class YtsSyncWorker(IServiceScopeFactory scopeFactory, ILogger<YtsSyncWor
 		}
 
 		logger.LogInformation("Image download complete: {Count} movies processed", completed);
+	}
+
+	private async Task ParseAllTorrentsAsync(CancellationToken ct) {
+		using var scope = scopeFactory.CreateScope();
+		var db = scope.ServiceProvider.GetRequiredService<OliverContext>();
+
+		var toParse = await db.TorrentInfos
+			.Where(t => t.TorrentFileDownloaded && !t.TorrentFileParsed && t.TorrentFilePath != null)
+			.ToListAsync(ct);
+
+		if (toParse.Count == 0) {
+			logger.LogInformation("No torrent files to parse");
+			return;
+		}
+
+		logger.LogInformation("Parsing {Count} torrent files", toParse.Count);
+
+		var parsed = 0;
+		var failed = 0;
+
+		foreach (var batch in toParse.Chunk(100)) {
+			foreach (var torrent in batch) {
+				ct.ThrowIfCancellationRequested();
+
+				var result = torrentParser.Parse(torrent.TorrentFilePath!);
+				if (result is null) {
+					failed++;
+					continue;
+				}
+
+				torrent.TorrentFileParsed = true;
+				torrent.ComputedInfoHash = result.InfoHash;
+				torrent.TorrentName = result.Name;
+				torrent.TotalFileSize = result.TotalFileSize;
+				torrent.FileCount = result.FileCount;
+				torrent.PieceLength = result.PieceLength;
+				torrent.Comment = result.Comment;
+				torrent.TorrentCreationDate = result.CreationDate;
+				torrent.MagnetLink = result.MagnetLink;
+
+				foreach (var file in result.Files) {
+					torrent.Files.Add(new TorrentFileEntry {
+						FilePath = file.Path,
+						FileSize = file.Size,
+					});
+				}
+
+				foreach (var tracker in result.Trackers) {
+					torrent.Trackers.Add(new TorrentTracker {
+						Url = tracker.Url,
+						Tier = tracker.Tier,
+					});
+				}
+
+				parsed++;
+			}
+
+			await db.SaveChangesAsync(ct);
+			logger.LogInformation("Torrent parsing: {Parsed} parsed, {Failed} failed, {Remaining} remaining",
+				parsed, failed, toParse.Count - parsed - failed);
+		}
+
+		logger.LogInformation("Torrent parsing complete: {Parsed} parsed, {Failed} failed", parsed, failed);
 	}
 
 	private static async Task<int> UpsertMoviesAsync(OliverContext db, List<YtsMovie> dtos) {

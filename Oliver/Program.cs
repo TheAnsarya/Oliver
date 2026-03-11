@@ -40,6 +40,7 @@ try {
 	// Services
 	builder.Services.AddScoped<YtsApiClient>();
 	builder.Services.AddScoped<DownloadService>();
+	builder.Services.AddSingleton<TorrentParsingService>();
 
 	// CORS for UI dev server
 	builder.Services.AddCors(options => {
@@ -71,15 +72,21 @@ try {
 		var movieCount = await db.Movies.CountAsync();
 		var torrentCount = await db.TorrentInfos.CountAsync();
 		var torrentsDownloaded = await db.TorrentInfos.CountAsync(t => t.TorrentFileDownloaded);
+		var torrentsParsed = await db.TorrentInfos.CountAsync(t => t.TorrentFileParsed);
 		var imagesDownloaded = await db.Movies.CountAsync(m => m.ImagesDownloaded);
 		var genreCount = await db.Genres.Select(g => g.Name).Distinct().CountAsync();
+		var fileEntryCount = await db.TorrentFileEntries.CountAsync();
+		var trackerCount = await db.TorrentTrackers.Select(t => t.Url).Distinct().CountAsync();
 
 		return Results.Ok(new {
 			movies = movieCount,
 			torrents = torrentCount,
 			torrentsDownloaded,
+			torrentsParsed,
 			imagesDownloaded,
 			genres = genreCount,
+			torrentFiles = fileEntryCount,
+			uniqueTrackers = trackerCount,
 		});
 	});
 

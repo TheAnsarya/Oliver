@@ -50,11 +50,12 @@ YTS API (list_movies.json)
 
 ### BackgroundServices/YtsSyncWorker.cs
 
-The main orchestrator. Runs three phases sequentially:
+The main orchestrator. Runs four phases sequentially:
 
 1. **SyncAllMovies** — Paginates through the entire YTS catalog, upserting movies/genres/torrents into the database
 2. **DownloadAllTorrents** — Downloads `.torrent` files for every torrent not yet downloaded
-3. **DownloadAllImages** — Downloads cover and background images for every movie not yet downloaded
+3. **ParseAllTorrents** — Parses downloaded `.torrent` files using BencodeNET to extract metadata, file lists, and tracker URLs
+4. **DownloadAllImages** — Downloads cover and background images for every movie not yet downloaded
 
 Uses `SyncState` table to track the last completed page for resume support.
 
@@ -71,9 +72,13 @@ File downloader for torrents and images. Downloads to structured folder layout:
 
 Skips already-downloaded files.
 
+### Services/TorrentParsingService.cs
+
+Parses `.torrent` files using BencodeNET 5. Extracts info hash, magnet link, file list (single and multi-file), tracker URLs with tiers, piece length, creation date, and comments. Returns a `TorrentParseResult` DTO.
+
 ### Data/OliverContext.cs
 
-EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestamps. Defines indexes on `Movie.YtsId` (unique), `TorrentInfo.Hash`, and `SyncState.Key` (unique).
+EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestamps. Defines indexes on `Movie.YtsId` (unique), `TorrentInfo.Hash`, and `SyncState.Key` (unique). Configures one-to-many relationships for TorrentInfo → Files and TorrentInfo → Trackers.
 
 ### Domain Models
 
@@ -81,7 +86,9 @@ EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestam
 |--------|------------|
 | **Movie** | YtsId, Title, Year, Rating, Runtime, ImdbCode, image URLs, ImagesDownloaded |
 | **Genre** | Name, MovieId (FK) |
-| **TorrentInfo** | Hash, Url, Quality, Type, Size, TorrentFileDownloaded, TorrentFilePath |
+| **TorrentInfo** | Hash, Url, Quality, Type, Size, TorrentFileDownloaded, TorrentFilePath, TorrentFileParsed, ComputedInfoHash, TorrentName, TotalFileSize, FileCount, PieceLength, Comment, TorrentCreationDate, MagnetLink |
+| **TorrentFileEntry** | FilePath, FileSize, TorrentInfoId (FK) |
+| **TorrentTracker** | Url, Tier, TorrentInfoId (FK) |
 | **SyncState** | Key, Value (for tracking sync progress) |
 | **Entity** | Base class: Id (Guid), CreatedDate, UpdatedDate |
 
@@ -108,7 +115,7 @@ All tunable via `appsettings.json`:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/stats` | GET | Movie, torrent, image counts |
+| `/api/stats` | GET | Movie, torrent, parsed torrent, image, file, tracker counts |
 | `/api/movies` | GET | Paginated movie list with search/genre/quality filters |
 | `/api/genres` | GET | Genre list with counts |
 | `/api/sync-status` | GET | Sync progress state |
@@ -121,6 +128,6 @@ Query parameters for `/api/movies`: `page`, `limit`, `search`, `genre`, `quality
 - EF Core 10 + SQLite
 - Serilog.AspNetCore (Console + File sinks)
 - System.Text.Json
-- BencodeNET 5 (for future torrent file parsing)
+- BencodeNET 5 (torrent file parsing)
 - Vite 7.3 + React 19 + TypeScript 5.9 (UI)
 - TanStack React Query 5 (data fetching)

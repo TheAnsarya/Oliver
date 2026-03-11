@@ -33,8 +33,11 @@ export default function App() {
 					<StatCard label="Movies" value={stats.data?.movies} />
 					<StatCard label="Torrents" value={stats.data?.torrents} />
 					<StatCard label="Torrents Downloaded" value={stats.data?.torrentsDownloaded} />
+					<StatCard label="Torrents Parsed" value={stats.data?.torrentsParsed} />
 					<StatCard label="Images Downloaded" value={stats.data?.imagesDownloaded} />
 					<StatCard label="Genres" value={stats.data?.genres} />
+					<StatCard label="Torrent Files" value={stats.data?.torrentFiles} />
+					<StatCard label="Unique Trackers" value={stats.data?.uniqueTrackers} />
 					<StatCard label="Sync Page" value={sync.data?.lastCompletedPage ?? "—"} />
 				</div>
 

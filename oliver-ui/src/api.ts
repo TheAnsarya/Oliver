@@ -4,8 +4,11 @@ export interface Stats {
 	movies: number;
 	torrents: number;
 	torrentsDownloaded: number;
+	torrentsParsed: number;
 	imagesDownloaded: number;
 	genres: number;
+	torrentFiles: number;
+	uniqueTrackers: number;
 }
 
 export interface TorrentSummary {
