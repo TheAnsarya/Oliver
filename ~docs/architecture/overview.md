@@ -76,6 +76,16 @@ Skips already-downloaded files.
 
 Parses `.torrent` files using BencodeNET 5. Extracts info hash, magnet link, file list (single and multi-file), tracker URLs with tiers, piece length, creation date, and comments. Returns a `TorrentParseResult` DTO.
 
+### Services/DataVerificationService.cs
+
+Data integrity and completeness verification. Five verification methods:
+
+- **VerifyMovieCountAsync** — Compares DB movie count vs API total
+- **ValidateTorrentFilesAsync** — Parses all downloaded torrents, reports corrupt/missing
+- **ValidateImageFilesAsync** — Checks JPEG/PNG magic bytes on all downloaded images
+- **DetectGapsAsync** — Finds movies missing torrents or images
+- **GetCompletenessReportAsync** — Full report with percentages, per-quality breakdown, DB size
+
 ### Data/OliverContext.cs
 
 EF Core 10 DbContext with SQLite. Auto-sets `CreatedDate`/`UpdatedDate` timestamps. Defines indexes on `Movie.YtsId` (unique), `TorrentInfo.Hash`, and `SyncState.Key` (unique). Configures one-to-many relationships for TorrentInfo → Files and TorrentInfo → Trackers.
@@ -119,6 +129,11 @@ All tunable via `appsettings.json`:
 | `/api/movies` | GET | Paginated movie list with search/genre/quality filters |
 | `/api/genres` | GET | Genre list with counts |
 | `/api/sync-status` | GET | Sync progress state |
+| `/api/verify/movie-count` | GET | Compare DB count vs API total |
+| `/api/verify/torrents` | GET | Validate all downloaded torrent files |
+| `/api/verify/images` | GET | Validate all downloaded image files |
+| `/api/verify/gaps` | GET | Find movies missing torrents or images |
+| `/api/verify/completeness` | GET | Full completeness report with percentages |
 
 Query parameters for `/api/movies`: `page`, `limit`, `search`, `genre`, `quality`.
 

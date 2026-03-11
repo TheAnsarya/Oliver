@@ -41,6 +41,7 @@ try {
 	builder.Services.AddScoped<YtsApiClient>();
 	builder.Services.AddScoped<DownloadService>();
 	builder.Services.AddSingleton<TorrentParsingService>();
+	builder.Services.AddSingleton<DataVerificationService>();
 
 	// CORS for UI dev server
 	builder.Services.AddCors(options => {
@@ -171,6 +172,24 @@ try {
 
 		return Results.Ok(genres);
 	});
+
+	// Verification endpoints
+	var verify = api.MapGroup("/verify");
+
+	verify.MapGet("/movie-count", async (DataVerificationService svc, CancellationToken ct) =>
+		Results.Ok(await svc.VerifyMovieCountAsync(ct)));
+
+	verify.MapGet("/torrents", async (DataVerificationService svc, CancellationToken ct) =>
+		Results.Ok(await svc.ValidateTorrentFilesAsync(ct)));
+
+	verify.MapGet("/images", async (DataVerificationService svc, CancellationToken ct) =>
+		Results.Ok(await svc.ValidateImageFilesAsync(ct)));
+
+	verify.MapGet("/gaps", async (DataVerificationService svc, CancellationToken ct) =>
+		Results.Ok(await svc.DetectGapsAsync(ct)));
+
+	verify.MapGet("/completeness", async (DataVerificationService svc, CancellationToken ct) =>
+		Results.Ok(await svc.GetCompletenessReportAsync(ct)));
 
 	await app.RunAsync();
 } catch (Exception ex) {
