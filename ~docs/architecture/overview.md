@@ -2,7 +2,7 @@
 
 ## System Design
 
-Oliver is a **.NET 10 Worker Service** that runs as a background process to build a complete local copy of the YTS movie dataset. It is not a web application — it is a data pipeline that fetches, stores, and organizes movie data.
+Oliver is a **.NET 10 web application** that combines a background data pipeline with a REST API for the UI dashboard. It fetches, stores, and organizes the complete YTS movie dataset while serving data to the React-based frontend.
 
 ## Core Pipeline
 
@@ -12,13 +12,13 @@ YTS API (list_movies.json)
     ▼
 ┌──────────────────────┐
 │   YtsApiClient       │ ◄── Paginated HTTP requests (50/page)
-│   (Services/)        │
+│   (Services/)        │     Retry with exponential backoff
 └──────────┬───────────┘
            │
            ▼
 ┌──────────────────────┐
 │   YtsSyncWorker      │ ◄── Orchestrates the full sync
-│   (BackgroundServices│
+│   (BackgroundServices│     Parallel downloads (SemaphoreSlim)
 │   /YtsSyncWorker.cs) │
 └──┬─────────┬─────────┘
    │         │
@@ -26,12 +26,24 @@ YTS API (list_movies.json)
 ┌──────┐  ┌──────────────┐
 │  DB  │  │DownloadService│
 │SQLite│  │  (Services/) │
-└──────┘  └──────┬───────┘
-                 │
-          ┌──────┴──────┐
-          ▼             ▼
-    YtsData/        YtsData/
-    torrents/       images/
+└──┬───┘  └──────┬───────┘
+   │             │
+   │      ┌──────┴──────┐
+   │      ▼             ▼
+   │  YtsData/      YtsData/
+   │  torrents/     images/
+   │
+   ▼
+┌──────────────────────┐
+│   Minimal API        │ ◄── /api/stats, /api/movies, /api/genres,
+│   (Program.cs)       │     /api/sync-status
+└──────────┬───────────┘
+           │
+           ▼
+┌──────────────────────┐
+│   oliver-ui          │ ◄── Vite 7 + React 19 + TypeScript 5.9
+│   (Dashboard)        │     TanStack React Query
+└──────────────────────┘
 ```
 
 ## Components
@@ -81,6 +93,7 @@ DTOs for deserializing YTS API JSON responses. Maps to `System.Text.Json` attrib
 
 All tunable via `appsettings.json`:
 
+- **Urls** — Server listen URL (default `http://localhost:5000`)
 - **Database:Path** — SQLite file location
 - **Yts:ApiBaseUrl** — API endpoint
 - **Yts:PageSize** — Movies per API request (default 50)
@@ -88,11 +101,26 @@ All tunable via `appsettings.json`:
 - **Downloads:BasePath** — Root download directory
 - **Downloads:TorrentsFolder** — Torrent subfolder name
 - **Downloads:ImagesFolder** — Image subfolder name
+- **Downloads:MaxConcurrency** — Parallel download limit (default 5)
+- **Downloads:MaxRetries** — Retry count for failed downloads (default 3)
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/stats` | GET | Movie, torrent, image counts |
+| `/api/movies` | GET | Paginated movie list with search/genre/quality filters |
+| `/api/genres` | GET | Genre list with counts |
+| `/api/sync-status` | GET | Sync progress state |
+
+Query parameters for `/api/movies`: `page`, `limit`, `search`, `genre`, `quality`.
 
 ## Technology Stack
 
-- .NET 10 (Worker Service SDK)
+- .NET 10 (Web SDK with minimal APIs)
 - EF Core 10 + SQLite
-- Serilog (Console + File sinks)
+- Serilog.AspNetCore (Console + File sinks)
 - System.Text.Json
 - BencodeNET 5 (for future torrent file parsing)
+- Vite 7.3 + React 19 + TypeScript 5.9 (UI)
+- TanStack React Query 5 (data fetching)

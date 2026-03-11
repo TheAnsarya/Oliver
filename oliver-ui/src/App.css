@@ -18,9 +18,10 @@
 	font-size: 0.9rem;
 }
 
+/* Stats Grid */
 .stats-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	gap: 1rem;
 	margin-bottom: 2rem;
 }
@@ -34,17 +35,96 @@
 }
 
 .stat-card .value {
-	font-size: 2rem;
+	font-size: 1.75rem;
 	font-weight: 700;
 	color: #6c9bff;
 }
 
 .stat-card .label {
-	font-size: 0.85rem;
+	font-size: 0.8rem;
 	color: #888;
 	margin-top: 0.25rem;
 }
 
+/* Filters */
+.filters {
+	display: flex;
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.search-input {
+	flex: 1;
+	min-width: 200px;
+	padding: 0.5rem 0.75rem;
+	background: #16213e;
+	border: 1px solid #2a2a4a;
+	border-radius: 6px;
+	color: #e0e0e0;
+	font-size: 0.9rem;
+}
+
+.search-input::placeholder {
+	color: #666;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: #6c9bff;
+}
+
+.filter-select {
+	padding: 0.5rem 0.75rem;
+	background: #16213e;
+	border: 1px solid #2a2a4a;
+	border-radius: 6px;
+	color: #e0e0e0;
+	font-size: 0.9rem;
+	cursor: pointer;
+}
+
+.filter-select:focus {
+	outline: none;
+	border-color: #6c9bff;
+}
+
+.btn {
+	padding: 0.5rem 1rem;
+	background: #6c9bff;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	font-size: 0.9rem;
+	cursor: pointer;
+	white-space: nowrap;
+}
+
+.btn:hover {
+	background: #5a87e8;
+}
+
+.btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.btn-secondary {
+	background: #333;
+}
+
+.btn-secondary:hover {
+	background: #444;
+}
+
+.result-count {
+	font-size: 0.85rem;
+	color: #888;
+	margin-bottom: 1rem;
+}
+
+/* Movie Grid */
 .movie-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -68,6 +148,18 @@
 	width: 100%;
 	aspect-ratio: 2/3;
 	object-fit: cover;
+	display: block;
+}
+
+.movie-card .no-image {
+	width: 100%;
+	aspect-ratio: 2/3;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #0f1629;
+	color: #555;
+	font-size: 0.85rem;
 }
 
 .movie-card .info {
@@ -88,6 +180,37 @@
 	margin-top: 0.25rem;
 }
 
+.movie-card .qualities {
+	display: flex;
+	gap: 0.25rem;
+	margin-top: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.quality-badge {
+	font-size: 0.7rem;
+	padding: 0.1rem 0.4rem;
+	background: #2a2a4a;
+	border-radius: 4px;
+	color: #6c9bff;
+}
+
+/* Pagination */
+.pagination {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 1rem;
+	margin-top: 2rem;
+	padding: 1rem 0;
+}
+
+.page-info {
+	font-size: 0.9rem;
+	color: #888;
+}
+
+/* Status */
 .loading, .error {
 	text-align: center;
 	padding: 3rem;

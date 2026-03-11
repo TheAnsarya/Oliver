@@ -25,6 +25,19 @@ Build a complete local copy of the YTS movie dataset:
 - [x] HTTP connection pooling via SocketsHttpHandler
 - [x] Batch processing with chunked DB saves
 
+### Phase 1.5: REST API & UI Dashboard (Complete)
+
+- [x] Switch from Worker SDK to Web SDK (minimal APIs + hosted service)
+- [x] GET /api/stats — movie, torrent, image, genre counts
+- [x] GET /api/movies — paginated with search, genre, quality filters
+- [x] GET /api/genres — genre list with counts
+- [x] GET /api/sync-status — sync progress tracking
+- [x] CORS support for UI dev server
+- [x] Vite 7 + React 19 + TypeScript 5.9 UI dashboard
+- [x] TanStack React Query for data fetching with auto-refresh
+- [x] Movie browser with search, genre filter, quality filter, pagination
+- [x] Live stats dashboard with sync status
+
 ### Phase 2: Data Verification
 
 - [ ] Verify all movies have been synced (compare DB count vs API total)
